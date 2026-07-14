@@ -130,6 +130,15 @@ def test_select_first_available_entity_uses_precedence() -> None:
     assert selected == "sensor.global_temp"
 
 
+def test_select_first_available_entity_returns_none_when_unavailable() -> None:
+    selected = select_first_available_entity(
+        ["sensor.floor_temp"],
+        is_available=lambda entity_id: entity_id == "sensor.some_other_entity",
+    )
+
+    assert selected is None
+
+
 def test_outdoor_source_resolution_falls_back_floor_global_auto() -> None:
     resolved_temperature, resolved_humidity = resolve_outdoor_source_entities(
         floor_temperature_entity_id="sensor.floor_temp",
@@ -149,6 +158,25 @@ def test_outdoor_source_resolution_falls_back_floor_global_auto() -> None:
 
     assert resolved_temperature == "sensor.global_temp"
     assert resolved_humidity == "sensor.floor_humidity"
+
+
+def test_outdoor_source_resolution_uses_auto_when_floor_and_global_unavailable() -> None:
+    resolved_temperature, resolved_humidity = resolve_outdoor_source_entities(
+        floor_temperature_entity_id="sensor.floor_temp",
+        global_temperature_entity_id="sensor.global_temp",
+        auto_temperature_entity_id="sensor.auto_temp",
+        floor_humidity_entity_id="sensor.floor_humidity",
+        global_humidity_entity_id="sensor.global_humidity",
+        auto_humidity_entity_id="sensor.auto_humidity",
+        is_available=lambda entity_id: entity_id
+        in {
+            "sensor.auto_temp",
+            "sensor.auto_humidity",
+        },
+    )
+
+    assert resolved_temperature == "sensor.auto_temp"
+    assert resolved_humidity == "sensor.auto_humidity"
 
 
 def test_room_threshold_override_uses_defaults_for_invalid_values() -> None:

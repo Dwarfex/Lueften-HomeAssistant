@@ -461,11 +461,13 @@ class _LueftenRuntime:
             return _OutdoorSource(None, None)
 
         return _OutdoorSource(
-            temperature_entity_id=self._first_existing_entity(
-                [self._mapping_string(raw_override, CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)]
+            temperature_entity_id=select_first_available_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)],
+                is_available=self._entity_is_available,
             ),
-            humidity_entity_id=self._first_existing_entity(
-                [self._mapping_string(raw_override, CONF_OUTDOOR_HUMIDITY_ENTITY_ID)]
+            humidity_entity_id=select_first_available_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_HUMIDITY_ENTITY_ID)],
+                is_available=self._entity_is_available,
             ),
         )
 
