@@ -182,6 +182,16 @@ def test_binary_sensor_runtime_update_is_safe_before_entity_is_added() -> None:
     assert "if self.hass is None:" in binary_sensor_source
 
 
+def test_binary_sensor_names_include_reason_prefix() -> None:
+    strings_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"
+    ).read_text(encoding="utf-8")
+
+    assert '"Lüften: Senken Temperatur ({target_name})"' in strings_source
+    assert '"Lüften: Senken Luftfeuchte ({target_name})"' in strings_source
+    assert '"Lüften: Generisch ({target_name})"' in strings_source
+
+
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
     floor_kinds = determine_floor_sensor_kinds(
         [
