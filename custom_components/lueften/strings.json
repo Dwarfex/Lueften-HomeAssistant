@@ -15,10 +15,9 @@
           "floor_threshold_humidity": "Floor threshold for humidity",
           "floor_threshold_generic": "Floor threshold for generic sensor",
           "rescan_interval_minutes": "Rescan interval (minutes)",
-          "outdoor_temperature_entity_id": "Default outdoor temperature entity ID",
-          "outdoor_humidity_entity_id": "Default outdoor humidity entity ID",
-          "room_threshold_overrides": "Room threshold overrides (JSON)",
-          "floor_outdoor_overrides": "Floor outdoor sensor overrides (JSON)"
+          "outdoor_temperature_entity_id": "Default outdoor temperature entity",
+          "outdoor_humidity_entity_id": "Default outdoor humidity entity (optional)",
+          "room_threshold_overrides": "Room threshold overrides (JSON)"
         }
       }
     },
@@ -41,12 +40,18 @@
           "floor_threshold_humidity": "Floor threshold for humidity",
           "floor_threshold_generic": "Floor threshold for generic sensor",
           "rescan_interval_minutes": "Rescan interval (minutes)",
-          "outdoor_temperature_entity_id": "Default outdoor temperature entity ID",
-          "outdoor_humidity_entity_id": "Default outdoor humidity entity ID",
-          "room_threshold_overrides": "Room threshold overrides (JSON)",
-          "floor_outdoor_overrides": "Floor outdoor sensor overrides (JSON)"
+          "outdoor_temperature_entity_id": "Default outdoor temperature entity",
+          "outdoor_humidity_entity_id": "Default outdoor humidity entity (optional)",
+          "room_threshold_overrides": "Room threshold overrides (JSON)"
         }
+      },
+      "room_overrides": {
+        "title": "Room outdoor overrides",
+        "description": "Optionally set room-specific outdoor reference entities after discovery."
       }
+    },
+    "error": {
+      "invalid_selected_entity": "At least one selected override entity is no longer available."
     }
   },
   "entity": {

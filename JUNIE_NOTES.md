@@ -26,3 +26,9 @@
 ## 2026-07-14 15:52
 
 - Each feature gets a semantic version tag for release traceability.
+
+## 2026-07-14 17:50
+
+- Setup/Options UX decision: use entity dropdown selectors for outdoor temperature/humidity instead of manual entity-id typing.
+- Outdoor temperature selection is mandatory in setup; outdoor humidity stays optional with fallback.
+- Outdoor override configuration should be handled via options flow after discovery, not via manual JSON editing.

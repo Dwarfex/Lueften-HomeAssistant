@@ -21,6 +21,7 @@ from .const import (
     CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
     CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
     CONF_RESCAN_INTERVAL_MINUTES,
+    CONF_ROOM_OUTDOOR_OVERRIDES,
     CONF_ROOM_HUMIDITY_DELTA_GM3,
     CONF_ROOM_TEMPERATURE_DELTA_C,
     CONF_ROOM_THRESHOLD_OVERRIDES,
@@ -33,6 +34,7 @@ from .const import (
     DEFAULT_OUTDOOR_HUMIDITY_ENTITY_ID,
     DEFAULT_OUTDOOR_TEMPERATURE_ENTITY_ID,
     DEFAULT_RESCAN_INTERVAL_MINUTES,
+    DEFAULT_ROOM_OUTDOOR_OVERRIDES,
     DEFAULT_ROOM_THRESHOLD_OVERRIDES,
     DEFAULT_TEMPERATURE_DELTA_C,
     DOMAIN,
@@ -56,6 +58,7 @@ def build_default_options() -> dict[str, Any]:
         CONF_RESCAN_INTERVAL_MINUTES: DEFAULT_RESCAN_INTERVAL_MINUTES,
         CONF_OUTDOOR_TEMPERATURE_ENTITY_ID: DEFAULT_OUTDOOR_TEMPERATURE_ENTITY_ID,
         CONF_OUTDOOR_HUMIDITY_ENTITY_ID: DEFAULT_OUTDOOR_HUMIDITY_ENTITY_ID,
+        CONF_ROOM_OUTDOOR_OVERRIDES: dict(DEFAULT_ROOM_OUTDOOR_OVERRIDES),
         CONF_ROOM_THRESHOLD_OVERRIDES: dict(DEFAULT_ROOM_THRESHOLD_OVERRIDES),
         CONF_FLOOR_OUTDOOR_OVERRIDES: dict(DEFAULT_FLOOR_OUTDOOR_OVERRIDES),
     }
@@ -124,6 +127,33 @@ def _normalize_room_threshold_overrides(value: Any) -> dict[str, dict[str, float
     return normalized
 
 
+def _normalize_room_outdoor_overrides(value: Any) -> dict[str, dict[str, str]]:
+    normalized: dict[str, dict[str, str]] = {}
+
+    for room_id, raw_override in _load_override_mapping(value).items():
+        room_key = str(room_id).strip()
+        if not room_key or not isinstance(raw_override, Mapping):
+            continue
+
+        parsed_override: dict[str, str] = {}
+        temperature_entity_id = _normalize_entity_id(
+            raw_override.get(CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)
+        )
+        if temperature_entity_id:
+            parsed_override[CONF_OUTDOOR_TEMPERATURE_ENTITY_ID] = temperature_entity_id
+
+        humidity_entity_id = _normalize_entity_id(
+            raw_override.get(CONF_OUTDOOR_HUMIDITY_ENTITY_ID)
+        )
+        if humidity_entity_id:
+            parsed_override[CONF_OUTDOOR_HUMIDITY_ENTITY_ID] = humidity_entity_id
+
+        if parsed_override:
+            normalized[room_key] = parsed_override
+
+    return normalized
+
+
 def _normalize_floor_outdoor_overrides(value: Any) -> dict[str, dict[str, str]]:
     normalized: dict[str, dict[str, str]] = {}
 
@@ -161,6 +191,9 @@ def merge_entry_options(options: Mapping[str, Any]) -> dict[str, Any]:
     merged[CONF_OUTDOOR_HUMIDITY_ENTITY_ID] = _normalize_entity_id(
         merged.get(CONF_OUTDOOR_HUMIDITY_ENTITY_ID)
     ) or DEFAULT_OUTDOOR_HUMIDITY_ENTITY_ID
+    merged[CONF_ROOM_OUTDOOR_OVERRIDES] = _normalize_room_outdoor_overrides(
+        merged.get(CONF_ROOM_OUTDOOR_OVERRIDES)
+    )
     merged[CONF_ROOM_THRESHOLD_OVERRIDES] = _normalize_room_threshold_overrides(
         merged.get(CONF_ROOM_THRESHOLD_OVERRIDES)
     )

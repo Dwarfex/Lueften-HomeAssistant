@@ -50,6 +50,7 @@ from .const import (
     CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
     CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
     CONF_RESCAN_INTERVAL_MINUTES,
+    CONF_ROOM_OUTDOOR_OVERRIDES,
     CONF_ROOM_HUMIDITY_DELTA_GM3,
     CONF_ROOM_TEMPERATURE_DELTA_C,
     CONF_ROOM_THRESHOLD_OVERRIDES,
@@ -415,22 +416,36 @@ class _LueftenRuntime:
         room_sources: Mapping[str, _RoomSource],
         auto_outdoor_source: _OutdoorSource,
     ) -> dict[str, _OutdoorSource]:
+        room_overrides = self._option_mapping(CONF_ROOM_OUTDOOR_OVERRIDES)
         global_outdoor_override = self._resolve_global_outdoor_override()
         floor_overrides = self._option_mapping(CONF_FLOOR_OUTDOOR_OVERRIDES)
 
         room_outdoor_sources: dict[str, _OutdoorSource] = {}
         for area_id, room_source in room_sources.items():
+            room_outdoor_override = self._resolve_room_outdoor_override(
+                room_overrides,
+                area_id,
+            )
             floor_outdoor_override = self._resolve_floor_outdoor_override(
                 floor_overrides,
                 room_source.floor_id,
             )
-            temperature_entity_id, humidity_entity_id = resolve_outdoor_source_entities(
-                floor_temperature_entity_id=floor_outdoor_override.temperature_entity_id,
-                global_temperature_entity_id=global_outdoor_override.temperature_entity_id,
-                auto_temperature_entity_id=auto_outdoor_source.temperature_entity_id,
-                floor_humidity_entity_id=floor_outdoor_override.humidity_entity_id,
-                global_humidity_entity_id=global_outdoor_override.humidity_entity_id,
-                auto_humidity_entity_id=auto_outdoor_source.humidity_entity_id,
+            temperature_entity_id = select_first_available_entity(
+                [
+                    room_outdoor_override.temperature_entity_id,
+                    floor_outdoor_override.temperature_entity_id,
+                    global_outdoor_override.temperature_entity_id,
+                    auto_outdoor_source.temperature_entity_id,
+                ],
+                is_available=self._entity_is_available,
+            )
+            humidity_entity_id = select_first_available_entity(
+                [
+                    room_outdoor_override.humidity_entity_id,
+                    floor_outdoor_override.humidity_entity_id,
+                    global_outdoor_override.humidity_entity_id,
+                    auto_outdoor_source.humidity_entity_id,
+                ],
                 is_available=self._entity_is_available,
             )
             room_outdoor_sources[area_id] = _OutdoorSource(
@@ -439,6 +454,26 @@ class _LueftenRuntime:
             )
 
         return room_outdoor_sources
+
+    def _resolve_room_outdoor_override(
+        self,
+        room_overrides: Mapping[str, object],
+        room_id: str,
+    ) -> _OutdoorSource:
+        raw_override = room_overrides.get(room_id)
+        if not isinstance(raw_override, Mapping):
+            return _OutdoorSource(None, None)
+
+        return _OutdoorSource(
+            temperature_entity_id=select_first_available_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)],
+                is_available=self._entity_is_available,
+            ),
+            humidity_entity_id=select_first_available_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_HUMIDITY_ENTITY_ID)],
+                is_available=self._entity_is_available,
+            ),
+        )
 
     def _resolve_global_outdoor_override(self) -> _OutdoorSource:
         return _OutdoorSource(

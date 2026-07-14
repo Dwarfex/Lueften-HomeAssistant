@@ -198,3 +198,42 @@ def test_room_threshold_override_uses_defaults_for_invalid_values() -> None:
 
     assert temperature_delta_c == 2.5
     assert humidity_delta_gm3 == 1.0
+
+
+def test_room_outdoor_override_precedence_prefers_room_before_floor_global_auto() -> None:
+    selected = select_first_available_entity(
+        [
+            "sensor.room_outdoor_temperature",
+            "sensor.floor_outdoor_temperature",
+            "sensor.global_outdoor_temperature",
+            "sensor.auto_outdoor_temperature",
+        ],
+        is_available=lambda entity_id: entity_id
+        in {
+            "sensor.room_outdoor_temperature",
+            "sensor.floor_outdoor_temperature",
+            "sensor.global_outdoor_temperature",
+            "sensor.auto_outdoor_temperature",
+        },
+    )
+
+    assert selected == "sensor.room_outdoor_temperature"
+
+
+def test_room_outdoor_override_falls_back_to_floor_if_room_unavailable() -> None:
+    selected = select_first_available_entity(
+        [
+            "sensor.room_outdoor_temperature",
+            "sensor.floor_outdoor_temperature",
+            "sensor.global_outdoor_temperature",
+            "sensor.auto_outdoor_temperature",
+        ],
+        is_available=lambda entity_id: entity_id
+        in {
+            "sensor.floor_outdoor_temperature",
+            "sensor.global_outdoor_temperature",
+            "sensor.auto_outdoor_temperature",
+        },
+    )
+
+    assert selected == "sensor.floor_outdoor_temperature"

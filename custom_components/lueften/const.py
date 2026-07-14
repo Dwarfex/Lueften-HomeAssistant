@@ -14,6 +14,7 @@ CONF_FLOOR_THRESHOLD_GENERIC = "floor_threshold_generic"
 CONF_RESCAN_INTERVAL_MINUTES = "rescan_interval_minutes"
 CONF_OUTDOOR_TEMPERATURE_ENTITY_ID = "outdoor_temperature_entity_id"
 CONF_OUTDOOR_HUMIDITY_ENTITY_ID = "outdoor_humidity_entity_id"
+CONF_ROOM_OUTDOOR_OVERRIDES = "room_outdoor_overrides"
 CONF_ROOM_THRESHOLD_OVERRIDES = "room_threshold_overrides"
 CONF_FLOOR_OUTDOOR_OVERRIDES = "floor_outdoor_overrides"
 
@@ -31,6 +32,7 @@ DEFAULT_FLOOR_THRESHOLD = 1
 DEFAULT_RESCAN_INTERVAL_MINUTES = 15
 DEFAULT_OUTDOOR_TEMPERATURE_ENTITY_ID = ""
 DEFAULT_OUTDOOR_HUMIDITY_ENTITY_ID = ""
+DEFAULT_ROOM_OUTDOOR_OVERRIDES: dict[str, dict[str, str]] = {}
 DEFAULT_ROOM_THRESHOLD_OVERRIDES: dict[str, dict[str, float]] = {}
 DEFAULT_FLOOR_OUTDOOR_OVERRIDES: dict[str, dict[str, str]] = {}
 
