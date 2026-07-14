@@ -204,6 +204,16 @@ def test_binary_sensor_migrates_legacy_entity_names() -> None:
     assert "startswith(\"Lüften \"" not in binary_sensor_source
 
 
+def test_binary_sensor_removes_stale_registry_entities() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _remove_stale_registry_entities" in binary_sensor_source
+    assert "entity_registry.async_remove(registry_entry.entity_id)" in binary_sensor_source
+    assert "_remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())" in binary_sensor_source
+
+
 def test_binary_sensor_names_include_reason_prefix() -> None:
     strings_source = (
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"

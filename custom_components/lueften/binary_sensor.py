@@ -103,6 +103,21 @@ def _migrate_legacy_entity_names(hass: HomeAssistant, entry: ConfigEntry) -> Non
         entity_registry.async_update_entity(registry_entry.entity_id, name=None)
 
 
+@callback
+def _remove_stale_registry_entities(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    expected_unique_ids: set[str],
+) -> None:
+    entity_registry = er.async_get(hass)
+    for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if registry_entry.domain != "binary_sensor" or registry_entry.platform != DOMAIN:
+            continue
+        if registry_entry.unique_id in expected_unique_ids:
+            continue
+        entity_registry.async_remove(registry_entry.entity_id)
+
+
 @dataclass(frozen=True)
 class _RoomSource:
     area_id: str
@@ -226,6 +241,9 @@ class _LueftenRuntime:
         if definition.scope == "room":
             device_info["suggested_area"] = definition.target_name
         return device_info
+
+    def expected_unique_ids(self) -> set[str]:
+        return {definition.unique_id for definition in self._definitions.values()}
 
     @callback
     def _setup_listeners(self) -> None:
@@ -788,6 +806,7 @@ async def async_setup_entry(
     runtimes[entry.entry_id] = runtime
 
     entities = await runtime.async_initialize()
+    _remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())
     if entities:
         async_add_entities(entities)
 
