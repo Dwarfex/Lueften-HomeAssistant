@@ -70,8 +70,24 @@ _NO_FLOOR_ID = "no_floor"
 _RUNTIME_KEY = f"{DOMAIN}_runtime"
 
 
-def _is_legacy_entity_display_name(name: str | None) -> bool:
-    return isinstance(name, str) and name.startswith("Lüften ") and not name.startswith("Lüften:")
+def _is_lueften_binary_sensor_unique_id(unique_id: str | None) -> bool:
+    if not isinstance(unique_id, str):
+        return False
+    if "_" not in unique_id:
+        return False
+    scope, remainder = unique_id.split("_", 1)
+    if scope not in {"room", "floor"} or "_" not in remainder:
+        return False
+    _, kind = remainder.rsplit("_", 1)
+    return kind in {_SENSOR_KIND_TEMPERATURE, _SENSOR_KIND_HUMIDITY, _SENSOR_KIND_GENERIC}
+
+
+def _has_redundant_name_override(registry_entry: er.RegistryEntry) -> bool:
+    return (
+        isinstance(registry_entry.name, str)
+        and isinstance(registry_entry.original_name, str)
+        and registry_entry.name == registry_entry.original_name
+    )
 
 
 @callback
@@ -80,7 +96,9 @@ def _migrate_legacy_entity_names(hass: HomeAssistant, entry: ConfigEntry) -> Non
     for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
         if registry_entry.domain != "binary_sensor" or registry_entry.platform != DOMAIN:
             continue
-        if not _is_legacy_entity_display_name(registry_entry.name):
+        if not _is_lueften_binary_sensor_unique_id(registry_entry.unique_id):
+            continue
+        if not _has_redundant_name_override(registry_entry):
             continue
         entity_registry.async_update_entity(registry_entry.entity_id, name=None)
 

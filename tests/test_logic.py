@@ -197,8 +197,11 @@ def test_binary_sensor_migrates_legacy_entity_names() -> None:
     ).read_text(encoding="utf-8")
 
     assert "def _migrate_legacy_entity_names" in binary_sensor_source
+    assert "_is_lueften_binary_sensor_unique_id(registry_entry.unique_id)" in binary_sensor_source
+    assert "_has_redundant_name_override(registry_entry)" in binary_sensor_source
     assert "entity_registry.async_update_entity(registry_entry.entity_id, name=None)" in binary_sensor_source
     assert "_migrate_legacy_entity_names(hass, entry)" in binary_sensor_source
+    assert "startswith(\"Lüften \"" not in binary_sensor_source
 
 
 def test_binary_sensor_names_include_reason_prefix() -> None:
