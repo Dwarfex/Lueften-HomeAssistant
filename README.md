@@ -1,5 +1,6 @@
-````markdown
 # 🇩🇪 Lüften
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Dwarfex&repository=Lueften-HomeAssistant&category=integration)
 
 > **Lüften** *(noun)*: A uniquely German cultural ritual involving the simultaneous opening of every window in a building, usually during the least convenient weather imaginable, to combat the existential threat known as *stale air*. Failure to participate may result in judgment from nearby Germans.
 
@@ -85,5 +86,4 @@ Rooms without the required sensors for a given feature are simply ignored.
 Lüften doesn't try to automate your windows.
 
 It simply tells you, with stereotypical German confidence, when it's time to open them.
-````
 
