@@ -40,3 +40,7 @@
 ## 2026-07-14 19:45
 
 - For every bugfix, explicitly assess upgrade impact for already-installed versions and add a migration fix whenever required.
+
+## 2026-07-14 19:55
+
+- Keep `custom_components/lueften/manifest.json` version aligned with every published Git tag/release version (always).
