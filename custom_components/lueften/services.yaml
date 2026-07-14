@@ -1,0 +1,9 @@
+request_rescan:
+  name: Request rescan
+  description: Request immediate room/entity rescan and sensor refresh.
+  fields:
+    reason:
+      required: false
+      example: options_flow
+      selector:
+        text:

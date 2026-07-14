@@ -1,0 +1,27 @@
+DOMAIN = "lueften"
+
+CONF_ENABLE_TEMPERATURE = "enable_temperature"
+CONF_ENABLE_HUMIDITY = "enable_humidity"
+CONF_INCLUDE_GENERIC = "include_generic"
+
+CONF_DEFAULT_TEMPERATURE_DELTA_C = "default_temperature_delta_c"
+CONF_DEFAULT_HUMIDITY_DELTA_GM3 = "default_humidity_delta_gm3"
+
+CONF_FLOOR_THRESHOLD_TEMPERATURE = "floor_threshold_temperature"
+CONF_FLOOR_THRESHOLD_HUMIDITY = "floor_threshold_humidity"
+CONF_FLOOR_THRESHOLD_GENERIC = "floor_threshold_generic"
+
+CONF_RESCAN_INTERVAL_MINUTES = "rescan_interval_minutes"
+
+DEFAULT_ENABLE_TEMPERATURE = True
+DEFAULT_ENABLE_HUMIDITY = True
+DEFAULT_INCLUDE_GENERIC = True
+
+DEFAULT_TEMPERATURE_DELTA_C = 1.0
+DEFAULT_HUMIDITY_DELTA_GM3 = 1.0
+
+DEFAULT_FLOOR_THRESHOLD = 1
+DEFAULT_RESCAN_INTERVAL_MINUTES = 15
+
+SERVICE_REQUEST_RESCAN = "request_rescan"
+EVENT_RESCAN_REQUESTED = "lueften_rescan_requested"
