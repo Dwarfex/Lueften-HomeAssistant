@@ -112,7 +112,7 @@ class _SensorDefinition:
 
 
 class LueftenBinarySensor(BinarySensorEntity):
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(self, runtime: "_LueftenRuntime", definition: _SensorDefinition) -> None:
         self._runtime = runtime

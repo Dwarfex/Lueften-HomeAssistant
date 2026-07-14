@@ -182,6 +182,14 @@ def test_binary_sensor_runtime_update_is_safe_before_entity_is_added() -> None:
     assert "if self.hass is None:" in binary_sensor_source
 
 
+def test_binary_sensor_uses_entity_name_translation_mode() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "_attr_has_entity_name = True" in binary_sensor_source
+
+
 def test_binary_sensor_names_include_reason_prefix() -> None:
     strings_source = (
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"
