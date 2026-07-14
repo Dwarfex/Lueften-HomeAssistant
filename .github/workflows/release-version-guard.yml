@@ -1,0 +1,46 @@
+name: Release Version Guard
+
+on:
+  release:
+    types:
+      - published
+      - prereleased
+
+jobs:
+  verify-manifest-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository at release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Verify manifest version matches release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          manifest_version=$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest_path = Path("custom_components/lueften/manifest.json")
+          data = json.loads(manifest_path.read_text(encoding="utf-8"))
+          print(str(data.get("version", "")).strip())
+          PY
+          )
+
+          normalized_tag="${RELEASE_TAG#v}"
+
+          if [ -z "$manifest_version" ]; then
+            echo "::error::custom_components/lueften/manifest.json has no 'version' value."
+            exit 1
+          fi
+
+          if [ "$manifest_version" != "$normalized_tag" ]; then
+            echo "::error::Release tag '$RELEASE_TAG' does not match manifest version '$manifest_version'. Expected '$normalized_tag'."
+            exit 1
+          fi
+
+          echo "Version check passed: tag '$RELEASE_TAG' matches manifest version '$manifest_version'."

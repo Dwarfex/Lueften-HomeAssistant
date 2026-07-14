@@ -44,3 +44,7 @@
 ## 2026-07-14 19:55
 
 - Keep `custom_components/lueften/manifest.json` version aligned with every published Git tag/release version (always).
+
+## 2026-07-14 20:00
+
+- Maintain a release GitHub Action guard that fails when release tag version and `manifest.json` version diverge.
