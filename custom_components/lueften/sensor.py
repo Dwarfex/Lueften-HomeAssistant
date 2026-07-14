@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -86,10 +88,12 @@ class _LueftenSensorRuntime:
         hass: HomeAssistant,
         entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
+        binary_runtime: Any,
     ) -> None:
         self._hass = hass
         self._entry = entry
         self._async_add_entities = async_add_entities
+        self._binary_runtime = binary_runtime
         self._definitions: dict[str, _SensorDefinition] = {}
         self._states: dict[str, float | None] = {}
         self._entities: dict[str, LueftenDiagnosticSensor] = {}
@@ -110,10 +114,6 @@ class _LueftenSensorRuntime:
             )
             for definition in self._definitions.values()
         ]
-
-    @property
-    def _binary_runtime(self):
-        return self._hass.data[_RUNTIME_KEY][self._entry.entry_id]
 
     @callback
     def _build_definitions(self) -> None:
@@ -255,6 +255,20 @@ def _activate_diagnostics_when_enabled(hass: HomeAssistant, entry: ConfigEntry) 
         )
 
 
+async def _async_wait_for_binary_runtime(
+    hass: HomeAssistant,
+    entry_id: str,
+    *,
+    attempts: int = 40,
+) -> Any | None:
+    for _ in range(attempts):
+        runtime = hass.data.get(_RUNTIME_KEY, {}).get(entry_id)
+        if runtime is not None:
+            return runtime
+        await asyncio.sleep(0)
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -267,7 +281,12 @@ async def async_setup_entry(
         _remove_stale_registry_entities(hass, entry, expected_unique_ids=set())
         return
 
-    runtime = _LueftenSensorRuntime(hass, entry, async_add_entities)
+    binary_runtime = await _async_wait_for_binary_runtime(hass, entry.entry_id)
+    if binary_runtime is None:
+        _remove_stale_registry_entities(hass, entry, expected_unique_ids=set())
+        return
+
+    runtime = _LueftenSensorRuntime(hass, entry, async_add_entities, binary_runtime)
     entities = runtime.initialize()
     runtime.register_entities(entities)
     _remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())

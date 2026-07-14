@@ -253,6 +253,9 @@ def test_additional_info_sensors_are_disabled_by_default_and_translated() -> Non
 
     assert "if not enabled_by_default:" in sensor_source
     assert "_remove_stale_registry_entities(hass, entry, expected_unique_ids=set())" in sensor_source
+    assert "async def _async_wait_for_binary_runtime" in sensor_source
+    assert "binary_runtime = await _async_wait_for_binary_runtime(hass, entry.entry_id)" in sensor_source
+    assert "runtime = _LueftenSensorRuntime(hass, entry, async_add_entities, binary_runtime)" in sensor_source
     assert "enabled_by_default=True" in sensor_source
     assert "_activate_diagnostics_when_enabled(hass, entry)" in sensor_source
     assert '"room_temperature_difference_c"' in strings_source
