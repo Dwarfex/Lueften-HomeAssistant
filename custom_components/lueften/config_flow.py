@@ -11,6 +11,11 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
+from lueften_core.outdoor_candidates import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    discover_outdoor_candidates,
+)
 
 from . import build_default_options, merge_entry_options
 from .const import (
@@ -31,36 +36,50 @@ from .const import (
 )
 
 _SENSOR_DOMAIN = "sensor"
-_DEVICE_CLASS_TEMPERATURE = "temperature"
-_DEVICE_CLASS_HUMIDITY = "humidity"
+
+
+def _state_device_classes(hass) -> dict[str, object]:
+    return {
+        state.entity_id: state.attributes.get("device_class")
+        for state in hass.states.async_all(_SENSOR_DOMAIN)
+    }
 
 
 def _available_sensor_entity_ids(hass) -> set[str]:
     entity_registry = er.async_get(hass)
-    return {
+    registry_entity_ids = {
         entry.entity_id
         for entry in entity_registry.entities.values()
         if entry.domain == _SENSOR_DOMAIN
     }
+    state_entity_ids = {state.entity_id for state in hass.states.async_all(_SENSOR_DOMAIN)}
+    return registry_entity_ids | state_entity_ids
 
 
 def _discover_outdoor_candidates(hass) -> tuple[list[str], list[str]]:
     entity_registry = er.async_get(hass)
 
-    temperature_candidates = sorted(
+    registry_sensor_entity_ids = {
         entry.entity_id
         for entry in entity_registry.entities.values()
         if entry.domain == _SENSOR_DOMAIN
-        and str(entry.device_class or "") == _DEVICE_CLASS_TEMPERATURE
-    )
-    humidity_candidates = sorted(
-        entry.entity_id
-        for entry in entity_registry.entities.values()
-        if entry.domain == _SENSOR_DOMAIN
-        and str(entry.device_class or "") == _DEVICE_CLASS_HUMIDITY
-    )
+    }
+    state_device_classes = _state_device_classes(hass)
+    all_sensor_entity_ids = registry_sensor_entity_ids | set(state_device_classes)
 
-    return temperature_candidates, humidity_candidates
+    registry_device_classes = {
+        entity_id: (
+            entity_registry.entities[entity_id].device_class
+            if entity_id in entity_registry.entities
+            else None
+        )
+        for entity_id in all_sensor_entity_ids
+    }
+    return discover_outdoor_candidates(
+        entity_ids=all_sensor_entity_ids,
+        registry_device_classes=registry_device_classes,
+        state_device_classes=state_device_classes,
+    )
 
 
 def _resolve_area_id(
@@ -87,9 +106,9 @@ def _discover_room_sources(hass) -> list[tuple[str, str]]:
     for entry in entity_registry.entities.values():
         if entry.domain != _SENSOR_DOMAIN:
             continue
-        if str(entry.device_class or "") not in {
-            _DEVICE_CLASS_TEMPERATURE,
-            _DEVICE_CLASS_HUMIDITY,
+        if str(entry.device_class or "").strip().lower() not in {
+            DEVICE_CLASS_TEMPERATURE,
+            DEVICE_CLASS_HUMIDITY,
         }:
             continue
 

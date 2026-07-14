@@ -8,6 +8,7 @@ from lueften_core.logic import (
     should_lueften_for_humidity,
     should_lueften_for_temperature,
 )
+from lueften_core.outdoor_candidates import discover_outdoor_candidates
 from lueften_core.override_resolution import (
     resolve_outdoor_source_entities,
     resolve_room_threshold_values,
@@ -107,6 +108,33 @@ def test_room_sensor_selection_allows_temperature_only_path() -> None:
     )
 
     assert kinds == RoomSensorKinds(temperature=True, humidity=False, generic=True)
+
+
+def test_discover_outdoor_candidates_uses_state_device_class_fallback() -> None:
+    temperature_candidates, humidity_candidates = discover_outdoor_candidates(
+        entity_ids={
+            "sensor.app_battery_temperature",
+            "sensor.weather_station_outdoor_temperature",
+            "sensor.weather_station_outdoor_humidity",
+            "sensor.energy_power",
+        },
+        registry_device_classes={
+            "sensor.app_battery_temperature": "temperature",
+            "sensor.weather_station_outdoor_temperature": None,
+            "sensor.weather_station_outdoor_humidity": None,
+            "sensor.energy_power": "power",
+        },
+        state_device_classes={
+            "sensor.weather_station_outdoor_temperature": "temperature",
+            "sensor.weather_station_outdoor_humidity": "humidity",
+        },
+    )
+
+    assert temperature_candidates == [
+        "sensor.app_battery_temperature",
+        "sensor.weather_station_outdoor_temperature",
+    ]
+    assert humidity_candidates == ["sensor.weather_station_outdoor_humidity"]
 
 
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
