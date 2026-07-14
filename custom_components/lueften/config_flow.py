@@ -11,7 +11,8 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
-from lueften_core.outdoor_candidates import (
+
+from .outdoor_candidates import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     discover_outdoor_candidates,

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from lueften_core.logic import (
     FloorThresholds,
     RoomInputs,
@@ -135,6 +137,14 @@ def test_discover_outdoor_candidates_uses_state_device_class_fallback() -> None:
         "sensor.weather_station_outdoor_temperature",
     ]
     assert humidity_candidates == ["sensor.weather_station_outdoor_humidity"]
+
+
+def test_config_flow_has_no_external_outdoor_candidates_import() -> None:
+    config_flow_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "config_flow.py"
+    ).read_text(encoding="utf-8")
+
+    assert "from lueften_core.outdoor_candidates import" not in config_flow_source
 
 
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
