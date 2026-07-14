@@ -8,6 +8,7 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -59,6 +60,7 @@ class LueftenDiagnosticSensor(SensorEntity):
         self._attr_unique_id = definition.unique_id
         self._attr_translation_key = definition.translation_key
         self._attr_translation_placeholders = {"target_name": definition.area_name}
+        self._attr_device_info = runtime.device_info_for(definition)
         self._attr_entity_registry_enabled_default = enabled_by_default
         self._attr_entity_registry_visible_default = enabled_by_default
 
@@ -170,6 +172,20 @@ class _LueftenSensorRuntime:
     @callback
     def value_for(self, key: str) -> float | None:
         return self._states.get(key)
+
+    def device_info_for(self, definition: _SensorDefinition) -> dr.DeviceInfo:
+        return {
+            "identifiers": {
+                (
+                    DOMAIN,
+                    f"{self._entry.entry_id}:{_SCOPE_ROOM}:{definition.area_id}",
+                )
+            },
+            "name": f"Lüften {definition.area_name}",
+            "manufacturer": "Lüften",
+            "entry_type": dr.DeviceEntryType.SERVICE,
+            "suggested_area": definition.area_name,
+        }
 
     @callback
     def _handle_runtime_update(self) -> None:

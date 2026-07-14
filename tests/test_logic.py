@@ -275,6 +275,17 @@ def test_additional_info_sensors_are_room_only_and_do_not_touch_binary_sensor_sc
     assert "CONF_ENABLE_ADDITIONAL_INFO" not in binary_sensor_source
 
 
+def test_additional_info_sensors_share_room_device_grouping() -> None:
+    sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "self._attr_device_info = runtime.device_info_for(definition)" in sensor_source
+    assert "def device_info_for(self, definition: _SensorDefinition)" in sensor_source
+    assert 'f"{self._entry.entry_id}:{_SCOPE_ROOM}:{definition.area_id}"' in sensor_source
+    assert '"suggested_area": definition.area_name' in sensor_source
+
+
 def test_binary_sensor_room_kind_creation_is_not_blocked_by_outdoor_availability() -> None:
     binary_sensor_source = (
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
