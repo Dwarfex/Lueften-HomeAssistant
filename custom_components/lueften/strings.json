@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Lüften",
+        "description": "Configure sensor generation and thresholds.",
+        "data": {
+          "enable_temperature": "Enable temperature sensors",
+          "enable_humidity": "Enable humidity sensors",
+          "include_generic": "Enable generic \"Should Lüften\" sensors",
+          "default_temperature_delta_c": "Default temperature delta (°C)",
+          "default_humidity_delta_gm3": "Default absolute humidity delta (g/m³)",
+          "floor_threshold_temperature": "Floor threshold for temperature",
+          "floor_threshold_humidity": "Floor threshold for humidity",
+          "floor_threshold_generic": "Floor threshold for generic sensor",
+          "rescan_interval_minutes": "Rescan interval (minutes)",
+          "outdoor_temperature_entity_id": "Default outdoor temperature entity ID",
+          "outdoor_humidity_entity_id": "Default outdoor humidity entity ID",
+          "room_threshold_overrides": "Room threshold overrides (JSON)",
+          "floor_outdoor_overrides": "Floor outdoor sensor overrides (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only one Lüften configuration is allowed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lüften options",
+        "description": "Adjust sensors, thresholds, and outdoor source overrides.",
+        "data": {
+          "enable_temperature": "Enable temperature sensors",
+          "enable_humidity": "Enable humidity sensors",
+          "include_generic": "Enable generic \"Should Lüften\" sensors",
+          "default_temperature_delta_c": "Default temperature delta (°C)",
+          "default_humidity_delta_gm3": "Default absolute humidity delta (g/m³)",
+          "floor_threshold_temperature": "Floor threshold for temperature",
+          "floor_threshold_humidity": "Floor threshold for humidity",
+          "floor_threshold_generic": "Floor threshold for generic sensor",
+          "rescan_interval_minutes": "Rescan interval (minutes)",
+          "outdoor_temperature_entity_id": "Default outdoor temperature entity ID",
+          "outdoor_humidity_entity_id": "Default outdoor humidity entity ID",
+          "room_threshold_overrides": "Room threshold overrides (JSON)",
+          "floor_outdoor_overrides": "Floor outdoor sensor overrides (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Lüften to reduce temperature"
+      },
+      "room_humidity": {
+        "name": "{target_name} Lüften to reduce absolute humidity"
+      },
+      "room_generic": {
+        "name": "{target_name} Should Lüften"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Lüften to reduce temperature"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Lüften to reduce absolute humidity"
+      },
+      "floor_generic": {
+        "name": "{target_name} Should Lüften"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Request rescan",
+      "description": "Request immediate room and sensor rescan.",
+      "fields": {
+        "reason": {
+          "name": "Reason",
+          "description": "Optional reason for logging and diagnostics."
+        }
+      }
+    }
+  }
+}

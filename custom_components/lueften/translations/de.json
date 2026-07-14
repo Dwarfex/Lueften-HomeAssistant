@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lüften einrichten",
+        "description": "Sensorerstellung und Schwellenwerte konfigurieren.",
+        "data": {
+          "enable_temperature": "Temperatursensoren aktivieren",
+          "enable_humidity": "Feuchtigkeitssensoren aktivieren",
+          "include_generic": "Allgemeine \"Soll lüften\"-Sensoren aktivieren",
+          "default_temperature_delta_c": "Standard-Temperaturdifferenz (°C)",
+          "default_humidity_delta_gm3": "Standard-Differenz absolute Feuchte (g/m³)",
+          "floor_threshold_temperature": "Etagen-Schwellenwert für Temperatur",
+          "floor_threshold_humidity": "Etagen-Schwellenwert für Feuchtigkeit",
+          "floor_threshold_generic": "Etagen-Schwellenwert für allgemeinen Sensor",
+          "rescan_interval_minutes": "Neu-Scan-Intervall (Minuten)",
+          "outdoor_temperature_entity_id": "Standard-Entitäts-ID Außentemperatur",
+          "outdoor_humidity_entity_id": "Standard-Entitäts-ID Außenfeuchtigkeit",
+          "room_threshold_overrides": "Raum-Schwellenwert-Überschreibungen (JSON)",
+          "floor_outdoor_overrides": "Etagen-Außensensor-Überschreibungen (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nur eine Lüften-Konfiguration ist erlaubt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lüften-Optionen",
+        "description": "Sensoren, Schwellenwerte und Außenquellen-Überschreibungen anpassen.",
+        "data": {
+          "enable_temperature": "Temperatursensoren aktivieren",
+          "enable_humidity": "Feuchtigkeitssensoren aktivieren",
+          "include_generic": "Allgemeine \"Soll lüften\"-Sensoren aktivieren",
+          "default_temperature_delta_c": "Standard-Temperaturdifferenz (°C)",
+          "default_humidity_delta_gm3": "Standard-Differenz absolute Feuchte (g/m³)",
+          "floor_threshold_temperature": "Etagen-Schwellenwert für Temperatur",
+          "floor_threshold_humidity": "Etagen-Schwellenwert für Feuchtigkeit",
+          "floor_threshold_generic": "Etagen-Schwellenwert für allgemeinen Sensor",
+          "rescan_interval_minutes": "Neu-Scan-Intervall (Minuten)",
+          "outdoor_temperature_entity_id": "Standard-Entitäts-ID Außentemperatur",
+          "outdoor_humidity_entity_id": "Standard-Entitäts-ID Außenfeuchtigkeit",
+          "room_threshold_overrides": "Raum-Schwellenwert-Überschreibungen (JSON)",
+          "floor_outdoor_overrides": "Etagen-Außensensor-Überschreibungen (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Lüften zur Temperatursenkung"
+      },
+      "room_humidity": {
+        "name": "{target_name} Lüften zur Senkung der absoluten Feuchte"
+      },
+      "room_generic": {
+        "name": "{target_name} Soll lüften"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Lüften zur Temperatursenkung"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Lüften zur Senkung der absoluten Feuchte"
+      },
+      "floor_generic": {
+        "name": "{target_name} Soll lüften"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Neu-Scan anfordern",
+      "description": "Sofortigen Neu-Scan von Räumen und Sensoren anfordern.",
+      "fields": {
+        "reason": {
+          "name": "Grund",
+          "description": "Optionaler Grund für Protokollierung und Diagnose."
+        }
+      }
+    }
+  }
+}

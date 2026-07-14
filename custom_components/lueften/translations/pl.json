@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Skonfiguruj Lüften",
+        "description": "Skonfiguruj tworzenie sensorów i progi.",
+        "data": {
+          "enable_temperature": "Włącz sensory temperatury",
+          "enable_humidity": "Włącz sensory wilgotności",
+          "include_generic": "Włącz ogólne sensory \"Czy wietrzyć\"",
+          "default_temperature_delta_c": "Domyślna różnica temperatury (°C)",
+          "default_humidity_delta_gm3": "Domyślna różnica wilgotności bezwzględnej (g/m³)",
+          "floor_threshold_temperature": "Próg piętra dla temperatury",
+          "floor_threshold_humidity": "Próg piętra dla wilgotności",
+          "floor_threshold_generic": "Próg piętra dla sensora ogólnego",
+          "rescan_interval_minutes": "Interwał ponownego skanowania (minuty)",
+          "outdoor_temperature_entity_id": "Domyślny identyfikator encji temperatury zewnętrznej",
+          "outdoor_humidity_entity_id": "Domyślny identyfikator encji wilgotności zewnętrznej",
+          "room_threshold_overrides": "Nadpisania progów dla pomieszczeń (JSON)",
+          "floor_outdoor_overrides": "Nadpisania czujników zewnętrznych dla pięter (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Lüften."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Lüften",
+        "description": "Dostosuj sensory, progi i nadpisania źródeł zewnętrznych.",
+        "data": {
+          "enable_temperature": "Włącz sensory temperatury",
+          "enable_humidity": "Włącz sensory wilgotności",
+          "include_generic": "Włącz ogólne sensory \"Czy wietrzyć\"",
+          "default_temperature_delta_c": "Domyślna różnica temperatury (°C)",
+          "default_humidity_delta_gm3": "Domyślna różnica wilgotności bezwzględnej (g/m³)",
+          "floor_threshold_temperature": "Próg piętra dla temperatury",
+          "floor_threshold_humidity": "Próg piętra dla wilgotności",
+          "floor_threshold_generic": "Próg piętra dla sensora ogólnego",
+          "rescan_interval_minutes": "Interwał ponownego skanowania (minuty)",
+          "outdoor_temperature_entity_id": "Domyślny identyfikator encji temperatury zewnętrznej",
+          "outdoor_humidity_entity_id": "Domyślny identyfikator encji wilgotności zewnętrznej",
+          "room_threshold_overrides": "Nadpisania progów dla pomieszczeń (JSON)",
+          "floor_outdoor_overrides": "Nadpisania czujników zewnętrznych dla pięter (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Wietrz, aby obniżyć temperaturę"
+      },
+      "room_humidity": {
+        "name": "{target_name} Wietrz, aby obniżyć wilgotność bezwzględną"
+      },
+      "room_generic": {
+        "name": "{target_name} Czy wietrzyć"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Wietrz, aby obniżyć temperaturę"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Wietrz, aby obniżyć wilgotność bezwzględną"
+      },
+      "floor_generic": {
+        "name": "{target_name} Czy wietrzyć"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Poproś o ponowne skanowanie",
+      "description": "Poproś o natychmiastowe ponowne skanowanie pomieszczeń i sensorów.",
+      "fields": {
+        "reason": {
+          "name": "Powód",
+          "description": "Opcjonalny powód do logowania i diagnostyki."
+        }
+      }
+    }
+  }
+}

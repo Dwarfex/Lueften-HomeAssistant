@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Opsæt Lüften",
+        "description": "Konfigurer oprettelse af sensorer og tærskler.",
+        "data": {
+          "enable_temperature": "Aktivér temperatursensorer",
+          "enable_humidity": "Aktivér fugtighedssensorer",
+          "include_generic": "Aktivér generiske \"Skal lufte ud\"-sensorer",
+          "default_temperature_delta_c": "Standard temperaturforskel (°C)",
+          "default_humidity_delta_gm3": "Standard absolut fugtighedsforskel (g/m³)",
+          "floor_threshold_temperature": "Etagegrænse for temperatur",
+          "floor_threshold_humidity": "Etagegrænse for fugtighed",
+          "floor_threshold_generic": "Etagegrænse for generisk sensor",
+          "rescan_interval_minutes": "Gen-scanningsinterval (minutter)",
+          "outdoor_temperature_entity_id": "Standard enheds-ID for udendørstemperatur",
+          "outdoor_humidity_entity_id": "Standard enheds-ID for udendørs fugtighed",
+          "room_threshold_overrides": "Tærskel-tilsidesættelser pr. rum (JSON)",
+          "floor_outdoor_overrides": "Tilsidesættelser af udendørssensorer pr. etage (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Kun én Lüften-konfiguration er tilladt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lüften-indstillinger",
+        "description": "Juster sensorer, tærskler og tilsidesættelser af udendørskilder.",
+        "data": {
+          "enable_temperature": "Aktivér temperatursensorer",
+          "enable_humidity": "Aktivér fugtighedssensorer",
+          "include_generic": "Aktivér generiske \"Skal lufte ud\"-sensorer",
+          "default_temperature_delta_c": "Standard temperaturforskel (°C)",
+          "default_humidity_delta_gm3": "Standard absolut fugtighedsforskel (g/m³)",
+          "floor_threshold_temperature": "Etagegrænse for temperatur",
+          "floor_threshold_humidity": "Etagegrænse for fugtighed",
+          "floor_threshold_generic": "Etagegrænse for generisk sensor",
+          "rescan_interval_minutes": "Gen-scanningsinterval (minutter)",
+          "outdoor_temperature_entity_id": "Standard enheds-ID for udendørstemperatur",
+          "outdoor_humidity_entity_id": "Standard enheds-ID for udendørs fugtighed",
+          "room_threshold_overrides": "Tærskel-tilsidesættelser pr. rum (JSON)",
+          "floor_outdoor_overrides": "Tilsidesættelser af udendørssensorer pr. etage (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Luft ud for at sænke temperaturen"
+      },
+      "room_humidity": {
+        "name": "{target_name} Luft ud for at sænke den absolutte fugtighed"
+      },
+      "room_generic": {
+        "name": "{target_name} Skal lufte ud"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Luft ud for at sænke temperaturen"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Luft ud for at sænke den absolutte fugtighed"
+      },
+      "floor_generic": {
+        "name": "{target_name} Skal lufte ud"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Anmod om ny scanning",
+      "description": "Anmod om øjeblikkelig ny scanning af rum og sensorer.",
+      "fields": {
+        "reason": {
+          "name": "Årsag",
+          "description": "Valgfri årsag til logning og diagnosticering."
+        }
+      }
+    }
+  }
+}

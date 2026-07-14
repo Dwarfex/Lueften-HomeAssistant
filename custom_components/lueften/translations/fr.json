@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer Lüften",
+        "description": "Configurez la création des capteurs et les seuils.",
+        "data": {
+          "enable_temperature": "Activer les capteurs de température",
+          "enable_humidity": "Activer les capteurs d'humidité",
+          "include_generic": "Activer les capteurs génériques \"Faut-il aérer\"",
+          "default_temperature_delta_c": "Écart de température par défaut (°C)",
+          "default_humidity_delta_gm3": "Écart d'humidité absolue par défaut (g/m³)",
+          "floor_threshold_temperature": "Seuil d'étage pour la température",
+          "floor_threshold_humidity": "Seuil d'étage pour l'humidité",
+          "floor_threshold_generic": "Seuil d'étage pour le capteur générique",
+          "rescan_interval_minutes": "Intervalle de re-scan (minutes)",
+          "outdoor_temperature_entity_id": "ID d'entité de température extérieure par défaut",
+          "outdoor_humidity_entity_id": "ID d'entité d'humidité extérieure par défaut",
+          "room_threshold_overrides": "Surcharges des seuils par pièce (JSON)",
+          "floor_outdoor_overrides": "Surcharges des capteurs extérieurs par étage (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Une seule configuration Lüften est autorisée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Lüften",
+        "description": "Ajustez les capteurs, les seuils et les surcharges des sources extérieures.",
+        "data": {
+          "enable_temperature": "Activer les capteurs de température",
+          "enable_humidity": "Activer les capteurs d'humidité",
+          "include_generic": "Activer les capteurs génériques \"Faut-il aérer\"",
+          "default_temperature_delta_c": "Écart de température par défaut (°C)",
+          "default_humidity_delta_gm3": "Écart d'humidité absolue par défaut (g/m³)",
+          "floor_threshold_temperature": "Seuil d'étage pour la température",
+          "floor_threshold_humidity": "Seuil d'étage pour l'humidité",
+          "floor_threshold_generic": "Seuil d'étage pour le capteur générique",
+          "rescan_interval_minutes": "Intervalle de re-scan (minutes)",
+          "outdoor_temperature_entity_id": "ID d'entité de température extérieure par défaut",
+          "outdoor_humidity_entity_id": "ID d'entité d'humidité extérieure par défaut",
+          "room_threshold_overrides": "Surcharges des seuils par pièce (JSON)",
+          "floor_outdoor_overrides": "Surcharges des capteurs extérieurs par étage (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Aérer pour réduire la température"
+      },
+      "room_humidity": {
+        "name": "{target_name} Aérer pour réduire l'humidité absolue"
+      },
+      "room_generic": {
+        "name": "{target_name} Faut-il aérer"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Aérer pour réduire la température"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Aérer pour réduire l'humidité absolue"
+      },
+      "floor_generic": {
+        "name": "{target_name} Faut-il aérer"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Demander un nouveau scan",
+      "description": "Demande un nouveau scan immédiat des pièces et des capteurs.",
+      "fields": {
+        "reason": {
+          "name": "Raison",
+          "description": "Raison optionnelle pour les journaux et le diagnostic."
+        }
+      }
+    }
+  }
+}

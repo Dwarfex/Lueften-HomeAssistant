@@ -1,0 +1,86 @@
+{
+  "title": "Lüften",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurar Lüften",
+        "description": "Configura la creación de sensores y los umbrales.",
+        "data": {
+          "enable_temperature": "Activar sensores de temperatura",
+          "enable_humidity": "Activar sensores de humedad",
+          "include_generic": "Activar sensores genéricos \"Debe ventilar\"",
+          "default_temperature_delta_c": "Delta de temperatura predeterminado (°C)",
+          "default_humidity_delta_gm3": "Delta de humedad absoluta predeterminado (g/m³)",
+          "floor_threshold_temperature": "Umbral por planta para temperatura",
+          "floor_threshold_humidity": "Umbral por planta para humedad",
+          "floor_threshold_generic": "Umbral por planta para sensor genérico",
+          "rescan_interval_minutes": "Intervalo de reescaneo (minutos)",
+          "outdoor_temperature_entity_id": "ID de entidad predeterminada de temperatura exterior",
+          "outdoor_humidity_entity_id": "ID de entidad predeterminada de humedad exterior",
+          "room_threshold_overrides": "Anulaciones de umbral por habitación (JSON)",
+          "floor_outdoor_overrides": "Anulaciones de sensores exteriores por planta (JSON)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Solo se permite una configuración de Lüften."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Lüften",
+        "description": "Ajusta sensores, umbrales y anulaciones de fuentes exteriores.",
+        "data": {
+          "enable_temperature": "Activar sensores de temperatura",
+          "enable_humidity": "Activar sensores de humedad",
+          "include_generic": "Activar sensores genéricos \"Debe ventilar\"",
+          "default_temperature_delta_c": "Delta de temperatura predeterminado (°C)",
+          "default_humidity_delta_gm3": "Delta de humedad absoluta predeterminado (g/m³)",
+          "floor_threshold_temperature": "Umbral por planta para temperatura",
+          "floor_threshold_humidity": "Umbral por planta para humedad",
+          "floor_threshold_generic": "Umbral por planta para sensor genérico",
+          "rescan_interval_minutes": "Intervalo de reescaneo (minutos)",
+          "outdoor_temperature_entity_id": "ID de entidad predeterminada de temperatura exterior",
+          "outdoor_humidity_entity_id": "ID de entidad predeterminada de humedad exterior",
+          "room_threshold_overrides": "Anulaciones de umbral por habitación (JSON)",
+          "floor_outdoor_overrides": "Anulaciones de sensores exteriores por planta (JSON)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "room_temperature": {
+        "name": "{target_name} Ventilar para reducir la temperatura"
+      },
+      "room_humidity": {
+        "name": "{target_name} Ventilar para reducir la humedad absoluta"
+      },
+      "room_generic": {
+        "name": "{target_name} Debe ventilar"
+      },
+      "floor_temperature": {
+        "name": "{target_name} Ventilar para reducir la temperatura"
+      },
+      "floor_humidity": {
+        "name": "{target_name} Ventilar para reducir la humedad absoluta"
+      },
+      "floor_generic": {
+        "name": "{target_name} Debe ventilar"
+      }
+    }
+  },
+  "services": {
+    "request_rescan": {
+      "name": "Solicitar reescaneo",
+      "description": "Solicita un reescaneo inmediato de habitaciones y sensores.",
+      "fields": {
+        "reason": {
+          "name": "Motivo",
+          "description": "Motivo opcional para registros y diagnóstico."
+        }
+      }
+    }
+  }
+}

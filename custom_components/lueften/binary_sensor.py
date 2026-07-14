@@ -64,12 +64,6 @@ _SENSOR_KIND_HUMIDITY = "humidity"
 _SENSOR_KIND_GENERIC = "generic"
 _NO_FLOOR_ID = "no_floor"
 
-_ROOM_SENSOR_LABELS = {
-    _SENSOR_KIND_TEMPERATURE: "Lüften to reduce temperature",
-    _SENSOR_KIND_HUMIDITY: "Lüften to reduce absolute humidity",
-    _SENSOR_KIND_GENERIC: "Should Lüften",
-}
-
 _RUNTIME_KEY = f"{DOMAIN}_runtime"
 
 
@@ -109,6 +103,10 @@ class _SensorDefinition:
     def unique_id(self) -> str:
         return f"{self.scope}_{self.target_id}_{self.kind}"
 
+    @property
+    def translation_key(self) -> str:
+        return f"{self.scope}_{self.kind}"
+
 
 class LueftenBinarySensor(BinarySensorEntity):
     _attr_has_entity_name = False
@@ -117,11 +115,8 @@ class LueftenBinarySensor(BinarySensorEntity):
         self._runtime = runtime
         self._definition = definition
         self._attr_unique_id = definition.unique_id
-        self._attr_name = self._build_name(definition)
-
-    @staticmethod
-    def _build_name(definition: _SensorDefinition) -> str:
-        return f"{definition.target_name} {_ROOM_SENSOR_LABELS[definition.kind]}"
+        self._attr_translation_key = definition.translation_key
+        self._attr_translation_placeholders = {"target_name": definition.target_name}
 
     @property
     def is_on(self) -> bool | None:
