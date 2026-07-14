@@ -21,17 +21,19 @@ try:
 except ImportError:
     fr = None
 
-from lueften_core import (
+from .logic import (
     FloorThresholds,
     RoomInputs,
     RoomRecommendation,
     aggregate_floor_recommendations,
     build_room_recommendation,
+)
+from .override_resolution import (
     resolve_outdoor_source_entities,
     resolve_room_threshold_values,
     select_first_available_entity,
 )
-from lueften_core.sensor_selection import (
+from .sensor_selection import (
     RoomSensorKinds,
     determine_floor_sensor_kinds,
     determine_room_sensor_kinds,

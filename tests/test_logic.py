@@ -147,6 +147,15 @@ def test_config_flow_has_no_external_outdoor_candidates_import() -> None:
     assert "from lueften_core.outdoor_candidates import" not in config_flow_source
 
 
+def test_binary_sensor_has_no_external_lueften_core_imports() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "from lueften_core import" not in binary_sensor_source
+    assert "from lueften_core." not in binary_sensor_source
+
+
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
     floor_kinds = determine_floor_sensor_kinds(
         [
