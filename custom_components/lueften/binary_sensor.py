@@ -120,6 +120,7 @@ class LueftenBinarySensor(BinarySensorEntity):
         self._attr_unique_id = definition.unique_id
         self._attr_translation_key = definition.translation_key
         self._attr_translation_placeholders = {"target_name": definition.target_name}
+        self._attr_device_info = runtime.device_info_for(definition)
 
     @property
     def is_on(self) -> bool | None:
@@ -173,6 +174,22 @@ class _LueftenRuntime:
 
     def state_for(self, key: str) -> bool | None:
         return self._states.get(key)
+
+    def device_info_for(self, definition: _SensorDefinition) -> dr.DeviceInfo:
+        device_info: dr.DeviceInfo = {
+            "identifiers": {
+                (
+                    DOMAIN,
+                    f"{self._entry.entry_id}:{definition.scope}:{definition.target_id}",
+                )
+            },
+            "name": f"Lüften {definition.target_name}",
+            "manufacturer": "Lüften",
+            "entry_type": dr.DeviceEntryType.SERVICE,
+        }
+        if definition.scope == "room":
+            device_info["suggested_area"] = definition.target_name
+        return device_info
 
     @callback
     def _setup_listeners(self) -> None:

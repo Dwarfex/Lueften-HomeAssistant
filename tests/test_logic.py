@@ -156,6 +156,24 @@ def test_binary_sensor_has_no_external_lueften_core_imports() -> None:
     assert "from lueften_core." not in binary_sensor_source
 
 
+def test_binary_sensor_defines_device_info_for_integration_visibility() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "self._attr_device_info = runtime.device_info_for(definition)" in binary_sensor_source
+    assert '"identifiers"' in binary_sensor_source
+    assert "suggested_area" in binary_sensor_source
+
+
+def test_binary_sensor_runs_discovery_during_setup() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "entities = await runtime.async_initialize()" in binary_sensor_source
+
+
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
     floor_kinds = determine_floor_sensor_kinds(
         [
