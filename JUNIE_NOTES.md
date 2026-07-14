@@ -32,3 +32,11 @@
 - Setup/Options UX decision: use entity dropdown selectors for outdoor temperature/humidity instead of manual entity-id typing.
 - Outdoor temperature selection is mandatory in setup; outdoor humidity stays optional with fallback.
 - Outdoor override configuration should be handled via options flow after discovery, not via manual JSON editing.
+
+## 2026-07-14 19:33
+
+- Release notes language policy: all existing and future GitHub release notes must be written in English.
+
+## 2026-07-14 19:45
+
+- For every bugfix, explicitly assess upgrade impact for already-installed versions and add a migration fix whenever required.

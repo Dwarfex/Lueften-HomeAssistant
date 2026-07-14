@@ -128,6 +128,8 @@ class LueftenBinarySensor(BinarySensorEntity):
 
     @callback
     def async_runtime_updated(self) -> None:
+        if self.hass is None:
+            return
         self.async_write_ha_state()
 
 

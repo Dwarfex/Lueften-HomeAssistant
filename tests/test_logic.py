@@ -174,6 +174,14 @@ def test_binary_sensor_runs_discovery_during_setup() -> None:
     assert "entities = await runtime.async_initialize()" in binary_sensor_source
 
 
+def test_binary_sensor_runtime_update_is_safe_before_entity_is_added() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "if self.hass is None:" in binary_sensor_source
+
+
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
     floor_kinds = determine_floor_sensor_kinds(
         [
