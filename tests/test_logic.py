@@ -112,6 +112,18 @@ def test_room_sensor_selection_allows_temperature_only_path() -> None:
     assert kinds == RoomSensorKinds(temperature=True, humidity=False, generic=True)
 
 
+def test_room_sensor_selection_allows_humidity_sensor_with_indoor_inputs() -> None:
+    kinds = determine_room_sensor_kinds(
+        has_indoor_temperature=True,
+        has_indoor_humidity=True,
+        enable_temperature=True,
+        enable_humidity=True,
+        include_generic=True,
+    )
+
+    assert kinds == RoomSensorKinds(temperature=True, humidity=True, generic=True)
+
+
 def test_discover_outdoor_candidates_uses_state_device_class_fallback() -> None:
     temperature_candidates, humidity_candidates = discover_outdoor_candidates(
         entity_ids={
@@ -212,6 +224,16 @@ def test_binary_sensor_removes_stale_registry_entities() -> None:
     assert "def _remove_stale_registry_entities" in binary_sensor_source
     assert "entity_registry.async_remove(registry_entry.entity_id)" in binary_sensor_source
     assert "_remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())" in binary_sensor_source
+
+
+def test_binary_sensor_room_kind_creation_is_not_blocked_by_outdoor_availability() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "has_indoor_temperature=room_source.temperature_entity_id is not None" in binary_sensor_source
+    assert "has_indoor_humidity=room_source.humidity_entity_id is not None" in binary_sensor_source
+    assert "has_outdoor_humidity" not in binary_sensor_source
 
 
 def test_binary_sensor_names_include_reason_prefix() -> None:

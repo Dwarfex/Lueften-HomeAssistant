@@ -639,18 +639,9 @@ class _LueftenRuntime:
         room_kinds: dict[str, RoomSensorKinds] = {}
 
         for area_id, room_source in room_sources.items():
-            outdoor_source = room_outdoor_sources.get(area_id)
-            has_outdoor_temperature = bool(outdoor_source and outdoor_source.temperature_entity_id)
-            has_outdoor_humidity = bool(outdoor_source and outdoor_source.humidity_entity_id)
-
             kinds = determine_room_sensor_kinds(
-                has_indoor_temperature=room_source.temperature_entity_id is not None and has_outdoor_temperature,
-                has_indoor_humidity=(
-                    room_source.temperature_entity_id is not None
-                    and room_source.humidity_entity_id is not None
-                    and has_outdoor_temperature
-                    and has_outdoor_humidity
-                ),
+                has_indoor_temperature=room_source.temperature_entity_id is not None,
+                has_indoor_humidity=room_source.humidity_entity_id is not None,
                 enable_temperature=self._option_bool(CONF_ENABLE_TEMPERATURE),
                 enable_humidity=self._option_bool(CONF_ENABLE_HUMIDITY),
                 include_generic=self._option_bool(CONF_INCLUDE_GENERIC),
