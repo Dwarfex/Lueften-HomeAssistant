@@ -8,6 +8,11 @@ from lueften_core.logic import (
     should_lueften_for_humidity,
     should_lueften_for_temperature,
 )
+from lueften_core.sensor_selection import (
+    RoomSensorKinds,
+    determine_floor_sensor_kinds,
+    determine_room_sensor_kinds,
+)
 
 
 def test_absolute_humidity_returns_expected_range() -> None:
@@ -73,3 +78,39 @@ def test_floor_aggregation_ignores_unavailable_rooms() -> None:
     assert floor.temperature is True
     assert floor.humidity is None
     assert floor.generic is True
+
+
+def test_room_sensor_selection_skips_unavailable_requirements() -> None:
+    kinds = determine_room_sensor_kinds(
+        has_indoor_temperature=False,
+        has_indoor_humidity=True,
+        enable_temperature=True,
+        enable_humidity=True,
+        include_generic=True,
+    )
+
+    assert kinds == RoomSensorKinds(temperature=False, humidity=False, generic=False)
+
+
+def test_room_sensor_selection_allows_temperature_only_path() -> None:
+    kinds = determine_room_sensor_kinds(
+        has_indoor_temperature=True,
+        has_indoor_humidity=False,
+        enable_temperature=True,
+        enable_humidity=False,
+        include_generic=True,
+    )
+
+    assert kinds == RoomSensorKinds(temperature=True, humidity=False, generic=True)
+
+
+def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:
+    floor_kinds = determine_floor_sensor_kinds(
+        [
+            RoomSensorKinds(temperature=True, humidity=False, generic=True),
+            RoomSensorKinds(temperature=False, humidity=True, generic=True),
+        ],
+        include_generic=True,
+    )
+
+    assert floor_kinds == RoomSensorKinds(temperature=True, humidity=True, generic=True)

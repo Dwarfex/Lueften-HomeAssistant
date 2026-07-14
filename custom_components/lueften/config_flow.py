@@ -17,6 +17,8 @@ from .const import (
     CONF_FLOOR_THRESHOLD_HUMIDITY,
     CONF_FLOOR_THRESHOLD_TEMPERATURE,
     CONF_INCLUDE_GENERIC,
+    CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
+    CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
     CONF_RESCAN_INTERVAL_MINUTES,
     DOMAIN,
 )
@@ -61,8 +63,27 @@ def _build_options_schema(current: Mapping[str, Any]) -> vol.Schema:
                 CONF_RESCAN_INTERVAL_MINUTES,
                 default=current[CONF_RESCAN_INTERVAL_MINUTES],
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Required(
+                CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
+                default=current[CONF_OUTDOOR_TEMPERATURE_ENTITY_ID],
+            ): str,
+            vol.Required(
+                CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
+                default=current[CONF_OUTDOOR_HUMIDITY_ENTITY_ID],
+            ): str,
         }
     )
+
+
+def _normalize_options(options: Mapping[str, Any]) -> dict[str, Any]:
+    normalized = dict(options)
+    normalized[CONF_OUTDOOR_TEMPERATURE_ENTITY_ID] = str(
+        options.get(CONF_OUTDOOR_TEMPERATURE_ENTITY_ID, "")
+    ).strip()
+    normalized[CONF_OUTDOOR_HUMIDITY_ENTITY_ID] = str(
+        options.get(CONF_OUTDOOR_HUMIDITY_ENTITY_ID, "")
+    ).strip()
+    return normalized
 
 
 class LueftenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,7 +97,7 @@ class LueftenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = _build_options_schema(defaults)
 
         if user_input is not None:
-            options = merge_entry_options(user_input)
+            options = merge_entry_options(_normalize_options(user_input))
             return self.async_create_entry(
                 title="Lüften",
                 data={},
@@ -99,6 +120,9 @@ class LueftenOptionsFlow(config_entries.OptionsFlow):
         schema = _build_options_schema(current)
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=merge_entry_options(user_input))
+            return self.async_create_entry(
+                title="",
+                data=merge_entry_options(_normalize_options(user_input)),
+            )
 
         return self.async_show_form(step_id="init", data_schema=schema)

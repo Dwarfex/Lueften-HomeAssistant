@@ -8,6 +8,11 @@ from .logic import (
     should_lueften_for_humidity,
     should_lueften_for_temperature,
 )
+from .sensor_selection import (
+    RoomSensorKinds,
+    determine_floor_sensor_kinds,
+    determine_room_sensor_kinds,
+)
 
 __all__ = [
     "FloorThresholds",
@@ -18,4 +23,7 @@ __all__ = [
     "build_room_recommendation",
     "should_lueften_for_humidity",
     "should_lueften_for_temperature",
+    "RoomSensorKinds",
+    "determine_floor_sensor_kinds",
+    "determine_room_sensor_kinds",
 ]
