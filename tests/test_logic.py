@@ -251,11 +251,25 @@ def test_additional_info_sensors_are_disabled_by_default_and_translated() -> Non
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"
     ).read_text(encoding="utf-8")
 
-    assert "_attr_entity_registry_enabled_default = enabled_by_default" in sensor_source
-    assert "_attr_entity_registry_visible_default = enabled_by_default" in sensor_source
+    assert "if not enabled_by_default:" in sensor_source
+    assert "_remove_stale_registry_entities(hass, entry, expected_unique_ids=set())" in sensor_source
+    assert "enabled_by_default=True" in sensor_source
     assert "_activate_diagnostics_when_enabled(hass, entry)" in sensor_source
     assert '"room_temperature_difference_c"' in strings_source
     assert '"room_humidity_difference_gm3"' in strings_source
+
+
+def test_additional_info_sensors_are_room_only_and_do_not_touch_binary_sensor_scope() -> None:
+    sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "sensor.py"
+    ).read_text(encoding="utf-8")
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "for area_id, source in self._binary_runtime._room_sources.items():" in sensor_source
+    assert "floor" not in ' '.join(line for line in sensor_source.splitlines() if "_METRIC_" in line)
+    assert "CONF_ENABLE_ADDITIONAL_INFO" not in binary_sensor_source
 
 
 def test_binary_sensor_room_kind_creation_is_not_blocked_by_outdoor_availability() -> None:

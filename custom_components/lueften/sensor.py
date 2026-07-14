@@ -86,12 +86,10 @@ class _LueftenSensorRuntime:
         hass: HomeAssistant,
         entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
-        enabled_by_default: bool,
     ) -> None:
         self._hass = hass
         self._entry = entry
         self._async_add_entities = async_add_entities
-        self._enabled_by_default = enabled_by_default
         self._definitions: dict[str, _SensorDefinition] = {}
         self._states: dict[str, float | None] = {}
         self._entities: dict[str, LueftenDiagnosticSensor] = {}
@@ -108,7 +106,7 @@ class _LueftenSensorRuntime:
             LueftenDiagnosticSensor(
                 self,
                 definition,
-                enabled_by_default=self._enabled_by_default,
+                enabled_by_default=True,
             )
             for definition in self._definitions.values()
         ]
@@ -186,7 +184,7 @@ class _LueftenSensorRuntime:
             entity = LueftenDiagnosticSensor(
                 self,
                 definition,
-                enabled_by_default=self._enabled_by_default,
+                enabled_by_default=True,
             )
             self._entities[key] = entity
             new_entities.append(entity)
@@ -265,13 +263,16 @@ async def async_setup_entry(
     options = hass.data[DOMAIN][entry.entry_id]
     enabled_by_default = bool(options.get(CONF_ENABLE_ADDITIONAL_INFO, False))
 
-    runtime = _LueftenSensorRuntime(hass, entry, async_add_entities, enabled_by_default)
+    if not enabled_by_default:
+        _remove_stale_registry_entities(hass, entry, expected_unique_ids=set())
+        return
+
+    runtime = _LueftenSensorRuntime(hass, entry, async_add_entities)
     entities = runtime.initialize()
     runtime.register_entities(entities)
     _remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())
 
-    if enabled_by_default:
-        _activate_diagnostics_when_enabled(hass, entry)
+    _activate_diagnostics_when_enabled(hass, entry)
 
     if entities:
         async_add_entities(entities)
