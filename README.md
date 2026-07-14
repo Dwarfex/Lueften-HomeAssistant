@@ -1,6 +1,4 @@
-# 🇩🇪 Lüften
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Dwarfex&repository=Lueften-HomeAssistant&category=integration)
+# Lüften
 
 > **Lüften** *(noun)*: A uniquely German cultural ritual involving the simultaneous opening of every window in a building, usually during the least convenient weather imaginable, to combat the existential threat known as *stale air*. Failure to participate may result in judgment from nearby Germans.
 
@@ -10,12 +8,12 @@ The integration analyzes your indoor climate and creates binary sensors that tel
 
 ## Features
 
-- 🏠 Automatically creates sensors for every room and floor that has the required climate sensors.
-- 🌡️ Detect when airing out would reduce **temperature**.
-- 💧 Detect when airing out would reduce **absolute humidity**.
-- 🚪 Provides a generic **"Should Lüften"** sensor that combines all enabled conditions.
-- 🏢 Aggregates room recommendations into floor-level recommendations.
-- ⚙️ Configure exactly which sensor types should be created.
+- Automatically creates sensors for every room and floor that has the required climate sensors.
+- Detect when airing out would reduce **temperature**.
+- Detect when airing out would reduce **absolute humidity**.
+- Provides a generic **"Should Lüften"** sensor that combines all enabled conditions.
+- Aggregates room recommendations into floor-level recommendations.
+- Configure exactly which sensor types should be created.
 
 ## Generated Sensors
 
