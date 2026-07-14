@@ -9,6 +9,7 @@
           "enable_temperature": "Temperatursensoren aktivieren",
           "enable_humidity": "Feuchtigkeitssensoren aktivieren",
           "include_generic": "Allgemeine \"Soll lüften\"-Sensoren aktivieren",
+          "enable_additional_info": "Zusatzinformationen aktivieren",
           "default_temperature_delta_c": "Standard-Temperaturdifferenz (°C)",
           "default_humidity_delta_gm3": "Standard-Differenz absolute Feuchte (g/m³)",
           "floor_threshold_temperature": "Etagen-Schwellenwert für Temperatur",
@@ -35,6 +36,7 @@
           "enable_temperature": "Temperatursensoren aktivieren",
           "enable_humidity": "Feuchtigkeitssensoren aktivieren",
           "include_generic": "Allgemeine \"Soll lüften\"-Sensoren aktivieren",
+          "enable_additional_info": "Zusatzinformationen aktivieren",
           "default_temperature_delta_c": "Standard-Temperaturdifferenz (°C)",
           "default_humidity_delta_gm3": "Standard-Differenz absolute Feuchte (g/m³)",
           "floor_threshold_temperature": "Etagen-Schwellenwert für Temperatur",
@@ -68,6 +70,26 @@
       },
       "floor_generic": {
         "name": "Lüften: Generisch ({target_name})"
+      }
+    },
+    "sensor": {
+      "room_temperature_difference_c": {
+        "name": "Lüften Zusatz: Temperaturdifferenz ({target_name})"
+      },
+      "room_humidity_difference_gm3": {
+        "name": "Lüften Zusatz: Feuchtedifferenz ({target_name})"
+      },
+      "room_source_temperature_c": {
+        "name": "Lüften Zusatz: Quelle Temperatur ({target_name})"
+      },
+      "room_target_temperature_c": {
+        "name": "Lüften Zusatz: Ziel Temperatur ({target_name})"
+      },
+      "room_source_humidity_gm3": {
+        "name": "Lüften Zusatz: Quelle absolute Luftfeuchte ({target_name})"
+      },
+      "room_target_humidity_gm3": {
+        "name": "Lüften Zusatz: Ziel absolute Luftfeuchte ({target_name})"
       }
     }
   },

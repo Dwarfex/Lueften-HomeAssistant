@@ -22,6 +22,7 @@ from . import build_default_options, merge_entry_options
 from .const import (
     CONF_DEFAULT_HUMIDITY_DELTA_GM3,
     CONF_DEFAULT_TEMPERATURE_DELTA_C,
+    CONF_ENABLE_ADDITIONAL_INFO,
     CONF_ENABLE_HUMIDITY,
     CONF_ENABLE_TEMPERATURE,
     CONF_FLOOR_THRESHOLD_GENERIC,
@@ -168,6 +169,10 @@ def _build_options_schema(
                 default=current[CONF_INCLUDE_GENERIC],
             ): bool,
             vol.Required(
+                CONF_ENABLE_ADDITIONAL_INFO,
+                default=current[CONF_ENABLE_ADDITIONAL_INFO],
+            ): bool,
+            vol.Required(
                 CONF_DEFAULT_TEMPERATURE_DELTA_C,
                 default=current[CONF_DEFAULT_TEMPERATURE_DELTA_C],
             ): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
@@ -256,6 +261,9 @@ def _as_json_default(value: Any) -> str:
 
 def _normalize_options(options: Mapping[str, Any]) -> dict[str, Any]:
     normalized = dict(options)
+    normalized[CONF_ENABLE_ADDITIONAL_INFO] = bool(
+        options.get(CONF_ENABLE_ADDITIONAL_INFO, False)
+    )
     normalized[CONF_OUTDOOR_TEMPERATURE_ENTITY_ID] = str(
         options.get(CONF_OUTDOOR_TEMPERATURE_ENTITY_ID, "")
     ).strip()

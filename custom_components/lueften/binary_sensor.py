@@ -25,6 +25,7 @@ from .logic import (
     FloorThresholds,
     RoomInputs,
     RoomRecommendation,
+    absolute_humidity_gm3,
     aggregate_floor_recommendations,
     build_room_recommendation,
 )
@@ -140,6 +141,16 @@ class _RoomThresholds:
 
 
 @dataclass(frozen=True)
+class _RoomDiagnosticState:
+    indoor_temperature_c: float | None
+    outdoor_temperature_c: float | None
+    indoor_absolute_humidity_gm3: float | None
+    outdoor_absolute_humidity_gm3: float | None
+    temperature_difference_c: float | None
+    humidity_difference_gm3: float | None
+
+
+@dataclass(frozen=True)
 class _SensorDefinition:
     scope: str
     target_id: str
@@ -203,12 +214,14 @@ class _LueftenRuntime:
         self._room_kinds: dict[str, RoomSensorKinds] = {}
         self._room_outdoor_sources: dict[str, _OutdoorSource] = {}
         self._room_thresholds: dict[str, _RoomThresholds] = {}
+        self._room_diagnostics: dict[str, _RoomDiagnosticState] = {}
         self._floor_rooms: dict[str, list[str]] = defaultdict(list)
         self._floor_names: dict[str, str] = {}
 
         self._source_entity_ids: set[str] = set()
         self._cleanup_callbacks: list[Callable[[], None]] = []
         self._cancel_state_listener: Callable[[], None] | None = None
+        self._update_listeners: list[Callable[[], None]] = []
 
     async def async_initialize(self) -> list[LueftenBinarySensor]:
         await self.async_rescan(add_new_entities=False)
@@ -244,6 +257,19 @@ class _LueftenRuntime:
 
     def expected_unique_ids(self) -> set[str]:
         return {definition.unique_id for definition in self._definitions.values()}
+
+    def room_diagnostics(self) -> dict[str, _RoomDiagnosticState]:
+        return dict(self._room_diagnostics)
+
+    def register_update_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        self._update_listeners.append(listener)
+
+        @callback
+        def _unsubscribe() -> None:
+            if listener in self._update_listeners:
+                self._update_listeners.remove(listener)
+
+        return _unsubscribe
 
     @callback
     def _setup_listeners(self) -> None:
@@ -334,17 +360,54 @@ class _LueftenRuntime:
     @callback
     def _refresh_states(self) -> None:
         room_recommendations: dict[str, RoomRecommendation] = {}
+        room_diagnostics: dict[str, _RoomDiagnosticState] = {}
         default_thresholds = self._default_room_thresholds()
 
         for area_id, source in self._room_sources.items():
             outdoor_source = self._room_outdoor_sources.get(area_id, _OutdoorSource(None, None))
             room_thresholds = self._room_thresholds.get(area_id, default_thresholds)
+            indoor_temperature_c = self._state_as_float(source.temperature_entity_id)
+            indoor_relative_humidity_pct = self._state_as_float(source.humidity_entity_id)
+            outdoor_temperature_c = self._state_as_float(outdoor_source.temperature_entity_id)
+            outdoor_relative_humidity_pct = self._state_as_float(outdoor_source.humidity_entity_id)
+
+            indoor_absolute_humidity_gm3 = (
+                absolute_humidity_gm3(indoor_temperature_c, indoor_relative_humidity_pct)
+                if indoor_temperature_c is not None and indoor_relative_humidity_pct is not None
+                else None
+            )
+            outdoor_absolute_humidity_gm3 = (
+                absolute_humidity_gm3(outdoor_temperature_c, outdoor_relative_humidity_pct)
+                if outdoor_temperature_c is not None and outdoor_relative_humidity_pct is not None
+                else None
+            )
+
+            temperature_difference_c = (
+                indoor_temperature_c - outdoor_temperature_c
+                if indoor_temperature_c is not None and outdoor_temperature_c is not None
+                else None
+            )
+            humidity_difference_gm3 = (
+                indoor_absolute_humidity_gm3 - outdoor_absolute_humidity_gm3
+                if indoor_absolute_humidity_gm3 is not None and outdoor_absolute_humidity_gm3 is not None
+                else None
+            )
+
+            room_diagnostics[area_id] = _RoomDiagnosticState(
+                indoor_temperature_c=indoor_temperature_c,
+                outdoor_temperature_c=outdoor_temperature_c,
+                indoor_absolute_humidity_gm3=indoor_absolute_humidity_gm3,
+                outdoor_absolute_humidity_gm3=outdoor_absolute_humidity_gm3,
+                temperature_difference_c=temperature_difference_c,
+                humidity_difference_gm3=humidity_difference_gm3,
+            )
+
             room_recommendation = build_room_recommendation(
                 RoomInputs(
-                    indoor_temperature_c=self._state_as_float(source.temperature_entity_id),
-                    indoor_relative_humidity_pct=self._state_as_float(source.humidity_entity_id),
-                    outdoor_temperature_c=self._state_as_float(outdoor_source.temperature_entity_id),
-                    outdoor_relative_humidity_pct=self._state_as_float(outdoor_source.humidity_entity_id),
+                    indoor_temperature_c=indoor_temperature_c,
+                    indoor_relative_humidity_pct=indoor_relative_humidity_pct,
+                    outdoor_temperature_c=outdoor_temperature_c,
+                    outdoor_relative_humidity_pct=outdoor_relative_humidity_pct,
                     enable_temperature=self._option_bool(CONF_ENABLE_TEMPERATURE),
                     enable_humidity=self._option_bool(CONF_ENABLE_HUMIDITY),
                     include_generic=self._option_bool(CONF_INCLUDE_GENERIC),
@@ -393,10 +456,14 @@ class _LueftenRuntime:
             if floor_kinds.generic:
                 self._states[f"floor:{floor_id}:{_SENSOR_KIND_GENERIC}"] = floor_recommendation.generic
 
+        self._room_diagnostics = room_diagnostics
+
     @callback
     def _push_state_updates(self) -> None:
         for entity in self._entities.values():
             entity.async_runtime_updated()
+        for listener in list(self._update_listeners):
+            listener()
 
     def _discover_sources(self) -> tuple[dict[str, _RoomSource], _OutdoorSource, dict[str, str]]:
         area_reg = ar.async_get(self._hass)

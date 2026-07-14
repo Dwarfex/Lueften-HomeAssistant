@@ -9,6 +9,7 @@
           "enable_temperature": "Enable temperature sensors",
           "enable_humidity": "Enable humidity sensors",
           "include_generic": "Enable generic \"Should Lüften\" sensors",
+          "enable_additional_info": "Enable additional information",
           "default_temperature_delta_c": "Default temperature delta (°C)",
           "default_humidity_delta_gm3": "Default absolute humidity delta (g/m³)",
           "floor_threshold_temperature": "Floor threshold for temperature",
@@ -35,6 +36,7 @@
           "enable_temperature": "Enable temperature sensors",
           "enable_humidity": "Enable humidity sensors",
           "include_generic": "Enable generic \"Should Lüften\" sensors",
+          "enable_additional_info": "Enable additional information",
           "default_temperature_delta_c": "Default temperature delta (°C)",
           "default_humidity_delta_gm3": "Default absolute humidity delta (g/m³)",
           "floor_threshold_temperature": "Floor threshold for temperature",
@@ -68,6 +70,26 @@
       },
       "floor_generic": {
         "name": "{target_name} Should Lüften"
+      }
+    },
+    "sensor": {
+      "room_temperature_difference_c": {
+        "name": "Lüften Extra: Temperature difference ({target_name})"
+      },
+      "room_humidity_difference_gm3": {
+        "name": "Lüften Extra: Humidity difference ({target_name})"
+      },
+      "room_source_temperature_c": {
+        "name": "Lüften Extra: Source temperature ({target_name})"
+      },
+      "room_target_temperature_c": {
+        "name": "Lüften Extra: Target temperature ({target_name})"
+      },
+      "room_source_humidity_gm3": {
+        "name": "Lüften Extra: Source absolute humidity ({target_name})"
+      },
+      "room_target_humidity_gm3": {
+        "name": "Lüften Extra: Target absolute humidity ({target_name})"
       }
     }
   },

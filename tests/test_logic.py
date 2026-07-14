@@ -226,6 +226,38 @@ def test_binary_sensor_removes_stale_registry_entities() -> None:
     assert "_remove_stale_registry_entities(hass, entry, runtime.expected_unique_ids())" in binary_sensor_source
 
 
+def test_additional_info_option_is_exposed_in_config_and_defaults() -> None:
+    const_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "const.py"
+    ).read_text(encoding="utf-8")
+    init_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "__init__.py"
+    ).read_text(encoding="utf-8")
+    config_flow_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "config_flow.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'CONF_ENABLE_ADDITIONAL_INFO = "enable_additional_info"' in const_source
+    assert "DEFAULT_ENABLE_ADDITIONAL_INFO = False" in const_source
+    assert "CONF_ENABLE_ADDITIONAL_INFO: DEFAULT_ENABLE_ADDITIONAL_INFO" in init_source
+    assert "CONF_ENABLE_ADDITIONAL_INFO" in config_flow_source
+
+
+def test_additional_info_sensors_are_disabled_by_default_and_translated() -> None:
+    sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "sensor.py"
+    ).read_text(encoding="utf-8")
+    strings_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"
+    ).read_text(encoding="utf-8")
+
+    assert "_attr_entity_registry_enabled_default = enabled_by_default" in sensor_source
+    assert "_attr_entity_registry_visible_default = enabled_by_default" in sensor_source
+    assert "_activate_diagnostics_when_enabled(hass, entry)" in sensor_source
+    assert '"room_temperature_difference_c"' in strings_source
+    assert '"room_humidity_difference_gm3"' in strings_source
+
+
 def test_binary_sensor_room_kind_creation_is_not_blocked_by_outdoor_availability() -> None:
     binary_sensor_source = (
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
