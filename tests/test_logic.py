@@ -188,16 +188,37 @@ def test_binary_sensor_uses_entity_name_translation_mode() -> None:
     ).read_text(encoding="utf-8")
 
     assert "_attr_has_entity_name = True" in binary_sensor_source
+    assert "_attr_translation_domain = DOMAIN" in binary_sensor_source
+
+
+def test_binary_sensor_migrates_legacy_entity_names() -> None:
+    binary_sensor_source = (
+        Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "binary_sensor.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _migrate_legacy_entity_names" in binary_sensor_source
+    assert "entity_registry.async_update_entity(registry_entry.entity_id, name=None)" in binary_sensor_source
+    assert "_migrate_legacy_entity_names(hass, entry)" in binary_sensor_source
 
 
 def test_binary_sensor_names_include_reason_prefix() -> None:
     strings_source = (
         Path(__file__).resolve().parents[1] / "custom_components" / "lueften" / "strings.json"
     ).read_text(encoding="utf-8")
+    de_translation_source = (
+        Path(__file__).resolve().parents[1]
+        / "custom_components"
+        / "lueften"
+        / "translations"
+        / "de.json"
+    ).read_text(encoding="utf-8")
 
     assert '"Lüften: Senken Temperatur ({target_name})"' in strings_source
     assert '"Lüften: Senken Luftfeuchte ({target_name})"' in strings_source
     assert '"Lüften: Generisch ({target_name})"' in strings_source
+    assert '"Lüften: Senken Temperatur ({target_name})"' in de_translation_source
+    assert '"Lüften: Senken Luftfeuchte ({target_name})"' in de_translation_source
+    assert '"Lüften: Generisch ({target_name})"' in de_translation_source
 
 
 def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> None:

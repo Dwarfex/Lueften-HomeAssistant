@@ -52,22 +52,22 @@
   "entity": {
     "binary_sensor": {
       "room_temperature": {
-        "name": "{target_name} Lüften zur Temperatursenkung"
+        "name": "Lüften: Senken Temperatur ({target_name})"
       },
       "room_humidity": {
-        "name": "{target_name} Lüften zur Senkung der absoluten Feuchte"
+        "name": "Lüften: Senken Luftfeuchte ({target_name})"
       },
       "room_generic": {
-        "name": "{target_name} Soll lüften"
+        "name": "Lüften: Generisch ({target_name})"
       },
       "floor_temperature": {
-        "name": "{target_name} Lüften zur Temperatursenkung"
+        "name": "Lüften: Senken Temperatur ({target_name})"
       },
       "floor_humidity": {
-        "name": "{target_name} Lüften zur Senkung der absoluten Feuchte"
+        "name": "Lüften: Senken Luftfeuchte ({target_name})"
       },
       "floor_generic": {
-        "name": "{target_name} Soll lüften"
+        "name": "Lüften: Generisch ({target_name})"
       }
     }
   },

@@ -70,6 +70,21 @@ _NO_FLOOR_ID = "no_floor"
 _RUNTIME_KEY = f"{DOMAIN}_runtime"
 
 
+def _is_legacy_entity_display_name(name: str | None) -> bool:
+    return isinstance(name, str) and name.startswith("Lüften ") and not name.startswith("Lüften:")
+
+
+@callback
+def _migrate_legacy_entity_names(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    entity_registry = er.async_get(hass)
+    for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if registry_entry.domain != "binary_sensor" or registry_entry.platform != DOMAIN:
+            continue
+        if not _is_legacy_entity_display_name(registry_entry.name):
+            continue
+        entity_registry.async_update_entity(registry_entry.entity_id, name=None)
+
+
 @dataclass(frozen=True)
 class _RoomSource:
     area_id: str
@@ -113,6 +128,7 @@ class _SensorDefinition:
 
 class LueftenBinarySensor(BinarySensorEntity):
     _attr_has_entity_name = True
+    _attr_translation_domain = DOMAIN
 
     def __init__(self, runtime: "_LueftenRuntime", definition: _SensorDefinition) -> None:
         self._runtime = runtime
@@ -745,6 +761,8 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    _migrate_legacy_entity_names(hass, entry)
+
     options = hass.data[DOMAIN][entry.entry_id]
     runtime = _LueftenRuntime(hass, entry, options, async_add_entities)
 
