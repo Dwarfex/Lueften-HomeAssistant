@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Callable
+from typing import Any, Callable
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,12 +16,20 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 
+try:
+    from homeassistant.helpers import floor_registry as fr
+except ImportError:
+    fr = None
+
 from lueften_core import (
     FloorThresholds,
     RoomInputs,
     RoomRecommendation,
     aggregate_floor_recommendations,
     build_room_recommendation,
+    resolve_outdoor_source_entities,
+    resolve_room_threshold_values,
+    select_first_available_entity,
 )
 from lueften_core.sensor_selection import (
     RoomSensorKinds,
@@ -33,6 +42,7 @@ from .const import (
     CONF_DEFAULT_TEMPERATURE_DELTA_C,
     CONF_ENABLE_HUMIDITY,
     CONF_ENABLE_TEMPERATURE,
+    CONF_FLOOR_OUTDOOR_OVERRIDES,
     CONF_FLOOR_THRESHOLD_GENERIC,
     CONF_FLOOR_THRESHOLD_HUMIDITY,
     CONF_FLOOR_THRESHOLD_TEMPERATURE,
@@ -40,6 +50,9 @@ from .const import (
     CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
     CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
     CONF_RESCAN_INTERVAL_MINUTES,
+    CONF_ROOM_HUMIDITY_DELTA_GM3,
+    CONF_ROOM_TEMPERATURE_DELTA_C,
+    CONF_ROOM_THRESHOLD_OVERRIDES,
     DEFAULT_FLOOR_THRESHOLD,
     DOMAIN,
     EVENT_RESCAN_REQUESTED,
@@ -73,6 +86,12 @@ class _RoomSource:
 class _OutdoorSource:
     temperature_entity_id: str | None
     humidity_entity_id: str | None
+
+
+@dataclass(frozen=True)
+class _RoomThresholds:
+    temperature_delta_c: float
+    humidity_delta_gm3: float
 
 
 @dataclass(frozen=True)
@@ -132,8 +151,10 @@ class _LueftenRuntime:
 
         self._room_sources: dict[str, _RoomSource] = {}
         self._room_kinds: dict[str, RoomSensorKinds] = {}
-        self._outdoor_source = _OutdoorSource(None, None)
+        self._room_outdoor_sources: dict[str, _OutdoorSource] = {}
+        self._room_thresholds: dict[str, _RoomThresholds] = {}
         self._floor_rooms: dict[str, list[str]] = defaultdict(list)
+        self._floor_names: dict[str, str] = {}
 
         self._source_entity_ids: set[str] = set()
         self._cleanup_callbacks: list[Callable[[], None]] = []
@@ -199,19 +220,23 @@ class _LueftenRuntime:
         )
 
     async def async_rescan(self, add_new_entities: bool = True) -> None:
-        room_sources, outdoor_source = self._discover_sources()
-        room_kinds = self._build_room_kinds(room_sources, outdoor_source)
+        room_sources, auto_outdoor_source, floor_names = self._discover_sources()
+        room_outdoor_sources = self._resolve_room_outdoor_sources(room_sources, auto_outdoor_source)
+        room_thresholds = self._resolve_room_thresholds(room_sources)
+        room_kinds = self._build_room_kinds(room_sources, room_outdoor_sources)
         floor_rooms = self._build_floor_room_map(room_sources, room_kinds)
         definitions = self._build_definitions(room_sources, room_kinds, floor_rooms)
 
         self._room_sources = room_sources
         self._room_kinds = room_kinds
-        self._outdoor_source = outdoor_source
+        self._room_outdoor_sources = room_outdoor_sources
+        self._room_thresholds = room_thresholds
         self._floor_rooms = floor_rooms
+        self._floor_names = floor_names
         self._definitions = definitions
 
         previous_source_entity_ids = set(self._source_entity_ids)
-        self._source_entity_ids = self._collect_source_entity_ids(room_sources, outdoor_source)
+        self._source_entity_ids = self._collect_source_entity_ids(room_sources, room_outdoor_sources)
 
         new_entity_keys = [key for key in definitions if key not in self._entities]
         removed_entity_keys = [key for key in self._entities if key not in definitions]
@@ -240,19 +265,22 @@ class _LueftenRuntime:
     @callback
     def _refresh_states(self) -> None:
         room_recommendations: dict[str, RoomRecommendation] = {}
+        default_thresholds = self._default_room_thresholds()
 
         for area_id, source in self._room_sources.items():
+            outdoor_source = self._room_outdoor_sources.get(area_id, _OutdoorSource(None, None))
+            room_thresholds = self._room_thresholds.get(area_id, default_thresholds)
             room_recommendation = build_room_recommendation(
                 RoomInputs(
                     indoor_temperature_c=self._state_as_float(source.temperature_entity_id),
                     indoor_relative_humidity_pct=self._state_as_float(source.humidity_entity_id),
-                    outdoor_temperature_c=self._state_as_float(self._outdoor_source.temperature_entity_id),
-                    outdoor_relative_humidity_pct=self._state_as_float(self._outdoor_source.humidity_entity_id),
+                    outdoor_temperature_c=self._state_as_float(outdoor_source.temperature_entity_id),
+                    outdoor_relative_humidity_pct=self._state_as_float(outdoor_source.humidity_entity_id),
                     enable_temperature=self._option_bool(CONF_ENABLE_TEMPERATURE),
                     enable_humidity=self._option_bool(CONF_ENABLE_HUMIDITY),
                     include_generic=self._option_bool(CONF_INCLUDE_GENERIC),
-                    temperature_delta_c=self._option_float(CONF_DEFAULT_TEMPERATURE_DELTA_C),
-                    humidity_delta_gm3=self._option_float(CONF_DEFAULT_HUMIDITY_DELTA_GM3),
+                    temperature_delta_c=room_thresholds.temperature_delta_c,
+                    humidity_delta_gm3=room_thresholds.humidity_delta_gm3,
                 )
             )
             room_recommendations[area_id] = room_recommendation
@@ -301,7 +329,7 @@ class _LueftenRuntime:
         for entity in self._entities.values():
             entity.async_runtime_updated()
 
-    def _discover_sources(self) -> tuple[dict[str, _RoomSource], _OutdoorSource]:
+    def _discover_sources(self) -> tuple[dict[str, _RoomSource], _OutdoorSource, dict[str, str]]:
         area_reg = ar.async_get(self._hass)
         entity_reg = er.async_get(self._hass)
         device_reg = dr.async_get(self._hass)
@@ -343,36 +371,140 @@ class _LueftenRuntime:
                 humidity_entity_id=room_humidity_entities[0] if room_humidity_entities else None,
             )
 
-        return room_sources, self._resolve_outdoor_source(
-            sorted(outdoor_temperature_candidates),
-            sorted(outdoor_humidity_candidates),
+        return (
+            room_sources,
+            self._resolve_auto_outdoor_source(
+                sorted(outdoor_temperature_candidates),
+                sorted(outdoor_humidity_candidates),
+            ),
+            self._discover_floor_names(),
         )
 
-    def _resolve_outdoor_source(
+    def _discover_floor_names(self) -> dict[str, str]:
+        if fr is None:
+            return {}
+
+        floor_registry = fr.async_get(self._hass)
+        floor_names: dict[str, str] = {}
+
+        for floor_entry in floor_registry.floors.values():
+            floor_id = str(
+                getattr(floor_entry, "floor_id", None)
+                or getattr(floor_entry, "id", "")
+            ).strip()
+            floor_name = str(getattr(floor_entry, "name", "")).strip()
+            if not floor_id or not floor_name:
+                continue
+            floor_names[floor_id] = floor_name
+
+        return floor_names
+
+    def _resolve_auto_outdoor_source(
         self,
         temperature_candidates: list[str],
         humidity_candidates: list[str],
     ) -> _OutdoorSource:
-        configured_temperature_entity = self._option_string(CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)
-        configured_humidity_entity = self._option_string(CONF_OUTDOOR_HUMIDITY_ENTITY_ID)
+        return _OutdoorSource(
+            temperature_entity_id=select_first_available_entity(
+                temperature_candidates,
+                is_available=self._entity_is_available,
+            ),
+            humidity_entity_id=select_first_available_entity(
+                humidity_candidates,
+                is_available=self._entity_is_available,
+            ),
+        )
 
-        selected_temperature_entity = configured_temperature_entity
-        if not selected_temperature_entity:
-            selected_temperature_entity = temperature_candidates[0] if temperature_candidates else None
+    def _resolve_room_outdoor_sources(
+        self,
+        room_sources: Mapping[str, _RoomSource],
+        auto_outdoor_source: _OutdoorSource,
+    ) -> dict[str, _OutdoorSource]:
+        global_outdoor_override = self._resolve_global_outdoor_override()
+        floor_overrides = self._option_mapping(CONF_FLOOR_OUTDOOR_OVERRIDES)
 
-        selected_humidity_entity = configured_humidity_entity
-        if not selected_humidity_entity:
-            selected_humidity_entity = humidity_candidates[0] if humidity_candidates else None
+        room_outdoor_sources: dict[str, _OutdoorSource] = {}
+        for area_id, room_source in room_sources.items():
+            floor_outdoor_override = self._resolve_floor_outdoor_override(
+                floor_overrides,
+                room_source.floor_id,
+            )
+            temperature_entity_id, humidity_entity_id = resolve_outdoor_source_entities(
+                floor_temperature_entity_id=floor_outdoor_override.temperature_entity_id,
+                global_temperature_entity_id=global_outdoor_override.temperature_entity_id,
+                auto_temperature_entity_id=auto_outdoor_source.temperature_entity_id,
+                floor_humidity_entity_id=floor_outdoor_override.humidity_entity_id,
+                global_humidity_entity_id=global_outdoor_override.humidity_entity_id,
+                auto_humidity_entity_id=auto_outdoor_source.humidity_entity_id,
+                is_available=self._entity_is_available,
+            )
+            room_outdoor_sources[area_id] = _OutdoorSource(
+                temperature_entity_id=temperature_entity_id,
+                humidity_entity_id=humidity_entity_id,
+            )
 
-        if selected_temperature_entity and self._hass.states.get(selected_temperature_entity) is None:
-            selected_temperature_entity = None
-        if selected_humidity_entity and self._hass.states.get(selected_humidity_entity) is None:
-            selected_humidity_entity = None
+        return room_outdoor_sources
+
+    def _resolve_global_outdoor_override(self) -> _OutdoorSource:
+        return _OutdoorSource(
+            temperature_entity_id=self._option_string(CONF_OUTDOOR_TEMPERATURE_ENTITY_ID),
+            humidity_entity_id=self._option_string(CONF_OUTDOOR_HUMIDITY_ENTITY_ID),
+        )
+
+    def _resolve_floor_outdoor_override(
+        self,
+        floor_overrides: Mapping[str, object],
+        floor_id: str,
+    ) -> _OutdoorSource:
+        raw_override = floor_overrides.get(floor_id)
+        if not isinstance(raw_override, Mapping):
+            return _OutdoorSource(None, None)
 
         return _OutdoorSource(
-            temperature_entity_id=selected_temperature_entity,
-            humidity_entity_id=selected_humidity_entity,
+            temperature_entity_id=self._first_existing_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_TEMPERATURE_ENTITY_ID)]
+            ),
+            humidity_entity_id=self._first_existing_entity(
+                [self._mapping_string(raw_override, CONF_OUTDOOR_HUMIDITY_ENTITY_ID)]
+            ),
         )
+
+    def _resolve_room_thresholds(
+        self,
+        room_sources: Mapping[str, _RoomSource],
+    ) -> dict[str, _RoomThresholds]:
+        default_thresholds = self._default_room_thresholds()
+        room_overrides = {
+            str(room_id): override
+            for room_id, override in self._option_mapping(CONF_ROOM_THRESHOLD_OVERRIDES).items()
+            if isinstance(override, Mapping)
+        }
+
+        room_thresholds: dict[str, _RoomThresholds] = {}
+        for area_id in room_sources:
+            temperature_delta_c, humidity_delta_gm3 = resolve_room_threshold_values(
+                room_overrides,
+                area_id,
+                default_temperature_delta_c=default_thresholds.temperature_delta_c,
+                default_humidity_delta_gm3=default_thresholds.humidity_delta_gm3,
+                temperature_key=CONF_ROOM_TEMPERATURE_DELTA_C,
+                humidity_key=CONF_ROOM_HUMIDITY_DELTA_GM3,
+            )
+            room_thresholds[area_id] = _RoomThresholds(
+                temperature_delta_c=temperature_delta_c,
+                humidity_delta_gm3=humidity_delta_gm3,
+            )
+
+        return room_thresholds
+
+    def _default_room_thresholds(self) -> _RoomThresholds:
+        return _RoomThresholds(
+            temperature_delta_c=self._option_float(CONF_DEFAULT_TEMPERATURE_DELTA_C),
+            humidity_delta_gm3=self._option_float(CONF_DEFAULT_HUMIDITY_DELTA_GM3),
+        )
+
+    def _entity_is_available(self, entity_id: str) -> bool:
+        return self._hass.states.get(entity_id) is not None
 
     @staticmethod
     def _resolve_area_id(
@@ -397,14 +529,15 @@ class _LueftenRuntime:
     def _build_room_kinds(
         self,
         room_sources: dict[str, _RoomSource],
-        outdoor_source: _OutdoorSource,
+        room_outdoor_sources: dict[str, _OutdoorSource],
     ) -> dict[str, RoomSensorKinds]:
         room_kinds: dict[str, RoomSensorKinds] = {}
 
-        has_outdoor_temperature = outdoor_source.temperature_entity_id is not None
-        has_outdoor_humidity = outdoor_source.humidity_entity_id is not None
-
         for area_id, room_source in room_sources.items():
+            outdoor_source = room_outdoor_sources.get(area_id)
+            has_outdoor_temperature = bool(outdoor_source and outdoor_source.temperature_entity_id)
+            has_outdoor_humidity = bool(outdoor_source and outdoor_source.humidity_entity_id)
+
             kinds = determine_room_sensor_kinds(
                 has_indoor_temperature=room_source.temperature_entity_id is not None and has_outdoor_temperature,
                 has_indoor_humidity=(
@@ -465,7 +598,10 @@ class _LueftenRuntime:
                 [room_kinds[room_id] for room_id in room_ids],
                 include_generic=self._option_bool(CONF_INCLUDE_GENERIC),
             )
-            floor_name = "No floor" if floor_id == _NO_FLOOR_ID else f"Floor {floor_id}"
+            floor_name = "No floor" if floor_id == _NO_FLOOR_ID else self._floor_names.get(
+                floor_id,
+                f"Floor {floor_id}",
+            )
             for kind, enabled in (
                 (_SENSOR_KIND_TEMPERATURE, floor_kinds.temperature),
                 (_SENSOR_KIND_HUMIDITY, floor_kinds.humidity),
@@ -486,7 +622,7 @@ class _LueftenRuntime:
     @staticmethod
     def _collect_source_entity_ids(
         room_sources: dict[str, _RoomSource],
-        outdoor_source: _OutdoorSource,
+        room_outdoor_sources: Mapping[str, _OutdoorSource],
     ) -> set[str]:
         source_entity_ids: set[str] = set()
         for source in room_sources.values():
@@ -494,10 +630,11 @@ class _LueftenRuntime:
                 source_entity_ids.add(source.temperature_entity_id)
             if source.humidity_entity_id:
                 source_entity_ids.add(source.humidity_entity_id)
-        if outdoor_source.temperature_entity_id:
-            source_entity_ids.add(outdoor_source.temperature_entity_id)
-        if outdoor_source.humidity_entity_id:
-            source_entity_ids.add(outdoor_source.humidity_entity_id)
+        for outdoor_source in room_outdoor_sources.values():
+            if outdoor_source.temperature_entity_id:
+                source_entity_ids.add(outdoor_source.temperature_entity_id)
+            if outdoor_source.humidity_entity_id:
+                source_entity_ids.add(outdoor_source.humidity_entity_id)
         return source_entity_ids
 
     def _state_as_float(self, entity_id: str | None) -> float | None:
@@ -536,6 +673,19 @@ class _LueftenRuntime:
         text = str(value).strip()
         return text or None
 
+    def _option_mapping(self, key: str) -> Mapping[str, object]:
+        value = self._options.get(key)
+        if isinstance(value, Mapping):
+            return value
+        return {}
+
+    @staticmethod
+    def _mapping_string(mapping: Mapping[str, object], key: str) -> str | None:
+        value = mapping.get(key)
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
 
 async def async_setup_entry(
     hass: HomeAssistant,

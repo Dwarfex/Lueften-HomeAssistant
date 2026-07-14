@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,12 +17,22 @@ from .const import (
     CONF_FLOOR_THRESHOLD_GENERIC,
     CONF_FLOOR_THRESHOLD_HUMIDITY,
     CONF_FLOOR_THRESHOLD_TEMPERATURE,
+    CONF_FLOOR_OUTDOOR_OVERRIDES,
     CONF_INCLUDE_GENERIC,
     CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
     CONF_OUTDOOR_TEMPERATURE_ENTITY_ID,
     CONF_RESCAN_INTERVAL_MINUTES,
+    CONF_ROOM_THRESHOLD_OVERRIDES,
     DOMAIN,
 )
+
+
+def _as_json_default(value: Any) -> str:
+    if isinstance(value, Mapping):
+        return json.dumps(value, indent=2, sort_keys=True)
+    if isinstance(value, str):
+        return value
+    return ""
 
 
 def _build_options_schema(current: Mapping[str, Any]) -> vol.Schema:
@@ -71,6 +82,14 @@ def _build_options_schema(current: Mapping[str, Any]) -> vol.Schema:
                 CONF_OUTDOOR_HUMIDITY_ENTITY_ID,
                 default=current[CONF_OUTDOOR_HUMIDITY_ENTITY_ID],
             ): str,
+            vol.Required(
+                CONF_ROOM_THRESHOLD_OVERRIDES,
+                default=_as_json_default(current[CONF_ROOM_THRESHOLD_OVERRIDES]),
+            ): str,
+            vol.Required(
+                CONF_FLOOR_OUTDOOR_OVERRIDES,
+                default=_as_json_default(current[CONF_FLOOR_OUTDOOR_OVERRIDES]),
+            ): str,
         }
     )
 
@@ -82,6 +101,12 @@ def _normalize_options(options: Mapping[str, Any]) -> dict[str, Any]:
     ).strip()
     normalized[CONF_OUTDOOR_HUMIDITY_ENTITY_ID] = str(
         options.get(CONF_OUTDOOR_HUMIDITY_ENTITY_ID, "")
+    ).strip()
+    normalized[CONF_ROOM_THRESHOLD_OVERRIDES] = str(
+        options.get(CONF_ROOM_THRESHOLD_OVERRIDES, "")
+    ).strip()
+    normalized[CONF_FLOOR_OUTDOOR_OVERRIDES] = str(
+        options.get(CONF_FLOOR_OUTDOOR_OVERRIDES, "")
     ).strip()
     return normalized
 

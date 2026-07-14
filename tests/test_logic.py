@@ -8,6 +8,11 @@ from lueften_core.logic import (
     should_lueften_for_humidity,
     should_lueften_for_temperature,
 )
+from lueften_core.override_resolution import (
+    resolve_outdoor_source_entities,
+    resolve_room_threshold_values,
+    select_first_available_entity,
+)
 from lueften_core.sensor_selection import (
     RoomSensorKinds,
     determine_floor_sensor_kinds,
@@ -114,3 +119,54 @@ def test_floor_sensor_selection_is_based_on_available_room_sensor_types() -> Non
     )
 
     assert floor_kinds == RoomSensorKinds(temperature=True, humidity=True, generic=True)
+
+
+def test_select_first_available_entity_uses_precedence() -> None:
+    selected = select_first_available_entity(
+        ["sensor.floor_temp", "sensor.global_temp", "sensor.auto_temp"],
+        is_available=lambda entity_id: entity_id in {"sensor.global_temp", "sensor.auto_temp"},
+    )
+
+    assert selected == "sensor.global_temp"
+
+
+def test_outdoor_source_resolution_falls_back_floor_global_auto() -> None:
+    resolved_temperature, resolved_humidity = resolve_outdoor_source_entities(
+        floor_temperature_entity_id="sensor.floor_temp",
+        global_temperature_entity_id="sensor.global_temp",
+        auto_temperature_entity_id="sensor.auto_temp",
+        floor_humidity_entity_id="sensor.floor_humidity",
+        global_humidity_entity_id="sensor.global_humidity",
+        auto_humidity_entity_id="sensor.auto_humidity",
+        is_available=lambda entity_id: entity_id
+        in {
+            "sensor.global_temp",
+            "sensor.floor_humidity",
+            "sensor.auto_temp",
+            "sensor.auto_humidity",
+        },
+    )
+
+    assert resolved_temperature == "sensor.global_temp"
+    assert resolved_humidity == "sensor.floor_humidity"
+
+
+def test_room_threshold_override_uses_defaults_for_invalid_values() -> None:
+    room_overrides = {
+        "living_room": {
+            "temperature_delta_c": "2.5",
+            "humidity_delta_gm3": -1.0,
+        }
+    }
+
+    temperature_delta_c, humidity_delta_gm3 = resolve_room_threshold_values(
+        room_overrides,
+        "living_room",
+        default_temperature_delta_c=1.0,
+        default_humidity_delta_gm3=1.0,
+        temperature_key="temperature_delta_c",
+        humidity_key="humidity_delta_gm3",
+    )
+
+    assert temperature_delta_c == 2.5
+    assert humidity_delta_gm3 == 1.0
